@@ -38,6 +38,17 @@ class RegonDatabaseScrapper:
             for line in f:
                 self._get_data(line.strip())
 
+    def _identify_entity_type(self, driver: webdriver):
+        if 'block' in driver.find_element(By.ID, 'tblRaportJFizyczna').get_attribute('style'):
+            return 'fiz'
+        elif 'block' in driver.find_element(By.ID, 'tblRaportJPrawna').get_attribute('style'):
+            return 'praw'
+        elif 'block' in driver.find_element(By.ID, 'tblRaportJLokalnaPrawnej').get_attribute('style'):
+            print('tblRaportJLokalnaPrawnej')
+        elif 'block' in driver.find_element(By.ID, 'tblRaportJLokalnaFizycznej').get_attribute('style'):
+            print('tblRaportJLokalnaFizycznej')
+        return 'th'
+
     def _get_data(self, key_value: str):
         url = "https://wyszukiwarkaregon.stat.gov.pl/appBIR/index.aspx"
         data_type = check_nip_regon_krs(key_value)
@@ -87,13 +98,52 @@ class RegonDatabaseScrapper:
     # Dorobić funkcje dla pozostałych typów (jednostka fizyczna, lokalna jednostka prawna, lokalna jednostka fizyczna)
     def _get_legal_entity_details(self, driver: webdriver):
         basic_table = driver.find_element(By.CLASS_NAME, 'tabelaRaportWewn')
-
+        entity_type = self._identify_entity_type(driver)
         # REGON
-        self.col_names.append(driver.find_element(By.ID, 'thpraw_regon9').text)
-        self.data.append(driver.find_element(By.ID, 'praw_regon9').text)
-        # TODO
-        # Analogicznie dla tych pól co na screenie zaznaczyłem
-        ...
+        self.col_names.append(driver.find_element(By.ID, f'th{entity_type}_regon9').text)
+        self.data.append(driver.find_element(By.ID, f'{entity_type}_regon9').text)
+        # NIP
+        self.col_names.append(driver.find_element(By.ID, f'th{entity_type}_nip').text)
+        self.data.append(driver.find_element(By.ID, f'{entity_type}_nip').text)
+        # NAZWA
+        self.col_names.append('nazwa')
+        self.data.append(driver.find_element(By.ID, f'{entity_type}_nazwa').text)
+        # kod i nazwa podstawowej formy prawnej
+        self.col_names.append('kod_i_nazwa_podstawowej_formy_prawnej')
+        self.data.append(driver.find_element(By.ID, f'{entity_type}_nazwaPodstawowejFormyPrawnej').text)
+        # kod i nazwa szczególnej formy prawnej
+        self.col_names.append('kod_i_nazwa_szczegolnej_formy_prawnej')
+        self.data.append(driver.find_element(By.ID, f'{entity_type}_nazwaSzczegolnejFormyPrawnej').text)
+        # kod i nazwa formy własności
+        self.col_names.append('kod_i_nazwa_formy_wlasnosci')
+        self.data.append(driver.find_element(By.ID, f'{entity_type}_nazwaFormyWlasnosci').text)
+
+
+        # kraj
+        self.col_names.append('kraj')
+        self.data.append(driver.find_element(By.ID, 'praw_adSiedzNazwaKraju').text)
+        # województwo
+        self.col_names.append('wojewodztwo')
+        self.data.append(driver.find_element(By.ID, 'praw_adSiedzNazwaWojewodztwa').text)
+        # powiat
+        self.col_names.append('powiat')
+        self.data.append(driver.find_element(By.ID, 'praw_adSiedzNazwaPowiatu').text)
+        # gmina
+        self.col_names.append('gmina')
+        self.data.append(driver.find_element(By.ID, 'praw_adSiedzNazwaGminy').text)
+        # miejscowość
+        self.col_names.append('miejscowosc')
+        self.data.append(driver.find_element(By.ID, 'praw_adSiedzNazwaMiejscowosci').text)
+        # ulica
+        self.col_names.append('ulica')
+        self.data.append(driver.find_element(By.ID, 'praw_adSiedzNazwaUlicy').text)
+        # nr nieruchomości
+        self.col_names.append('nr_nieruchomosci')
+        self.data.append(driver.find_element(By.ID, 'praw_adSiedzNumerNieruchomosci').text)
+        # kod pocztowy
+        self.col_names.append('kod_pocztowy')
+        self.data.append(driver.find_element(By.ID, 'praw_adSiedzKodPocztowy').text)
+
 
         address_table = []
         # TODO
