@@ -1,7 +1,5 @@
-import pandas as pd
-import requests
 import re
-from bs4 import BeautifulSoup
+from typing import Union
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -9,7 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 
 
-def check_nip_regon_krs(value):
+def check_nip_regon_krs(value: str) -> Union[str, None]:
     value = str(value)
     if len(value) == 10 and re.match(r'^\d{10}$', value):
         weights = [6, 5, 7, 2, 3, 4, 5, 6, 7]
@@ -29,64 +27,82 @@ def check_nip_regon_krs(value):
     return None
 
 
-def get_data(key_value):
-    url = "https://wyszukiwarkaregon.stat.gov.pl/appBIR/index.aspx"
-    data_type = check_nip_regon_krs(key_value)
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
-
-    if data_type == 'NIP':
-        input_data = soup.find("input", {"id": "txtNip"})
-        input_data["value"] = str(key_value)
-    elif data_type == 'REGON':
-        input_data = soup.find("input", {"id": "txtRegon"})
-        input_data["value"] = str(key_value)
-    elif data_type == 'KRS':
-        input_data = soup.find("input", {"id": "txtKrs"})
-        input_data["value"] = str(key_value)
-
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.get(url)
-
-    if data_type == 'NIP':
-        input_data = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, "txtNip")))
-        submit_button = driver.find_element(By.ID, "btnSzukaj")
-        input_data.send_keys(str(key_value))
-        submit_button.click()
-    elif data_type == 'REGON':
-        input_data = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, "txtRegon")))
-        submit_button = driver.find_element(By.ID, "btnSzukaj")
-        input_data.send_keys(str(key_value))
-        submit_button.click()
-    elif data_type == 'KRS':
-        input_data = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, "txtKrs")))
-        submit_button = driver.find_element(By.ID, "btnSzukaj")
-        input_data.send_keys(str(key_value))
-        submit_button.click()
-
-    WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'tabelaZbiorczaListaJednostek')))
-
-    table = driver.find_element(By.CLASS_NAME, 'tabelaZbiorczaListaJednostek')
-    rows = table.find_elements(By.CSS_SELECTOR, 'tr.tabelaZbiorczaListaJednostekAltRow')
-    results = [[cell.text for cell in row.find_elements(By.TAG_NAME, 'td')] for row in rows]
-    driver.quit()
-
-    return pd.DataFrame(results)
-
-
 class RegonDatabaseScrapper:
-    def __init__(self, filepath):
+    def __init__(self, filepath: str):
         self.filepath = filepath
+        self.col_names = []
+        self.data = []
 
     def get_entity_info(self):
-        df = pd.DataFrame()
-
         with open(self.filepath, 'r') as f:
             for line in f:
-                df = pd.concat([df, get_data(line.strip())], ignore_index=True)
-            df.columns = ['Regon', 'Typ', 'Nazwa', 'Województwo', 'Powiat', 'Gmina', 'Kod pocztowy',
-                                   'Miejscowość', 'Ulica', 'Informacja o skreśleniu z REGON']
-            print(df[['Regon', 'Typ', 'Nazwa']])
+                self._get_data(line.strip())
+
+    def _get_data(self, key_value: str):
+        url = "https://wyszukiwarkaregon.stat.gov.pl/appBIR/index.aspx"
+        data_type = check_nip_regon_krs(key_value)
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.get(url)
+
+        if data_type == 'NIP':
+            input_data = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, "txtNip")))
+            submit_button = driver.find_element(By.ID, "btnSzukaj")
+            input_data.send_keys(str(key_value))
+            submit_button.click()
+        elif data_type == 'REGON':
+            input_data = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, "txtRegon")))
+            submit_button = driver.find_element(By.ID, "btnSzukaj")
+            input_data.send_keys(str(key_value))
+            submit_button.click()
+        elif data_type == 'KRS':
+            input_data = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, "txtKrs")))
+            submit_button = driver.find_element(By.ID, "btnSzukaj")
+            input_data.send_keys(str(key_value))
+            submit_button.click()
+
+        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'tabelaZbiorczaListaJednostek')))
+
+        table = driver.find_element(By.CLASS_NAME, 'tabelaZbiorczaListaJednostek')
+        rows = table.find_elements(By.CSS_SELECTOR, 'tr.tabelaZbiorczaListaJednostekAltRow')
+
+        general_data = [[cell.text for cell in row.find_elements(By.TAG_NAME, 'td')] for row in rows][0]
+
+        # TODO
+        # Wyciągnąć headery z tej samej tabeli (konkretnie Typ i Ulica, bo tylko te dane zabieramy)
+        self.data.extend([general_data[1], general_data[8]])
+
+        regon_link = rows[0].find_element(By.CSS_SELECTOR, 'a')
+        regon_link.click()
+
+        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'tabelaRaportWewn')))
+
+        self._get_legal_entity_details(driver)
+
+        driver.quit()
+
+    # TODO
+    # Dorobić funkcje dla pozostałych typów (jednostka fizyczna, lokalna jednostka prawna, lokalna jednostka fizyczna)
+    def _get_legal_entity_details(self, driver: webdriver):
+        basic_table = driver.find_element(By.CLASS_NAME, 'tabelaRaportWewn')
+
+        # REGON
+        self.col_names.append(driver.find_element(By.ID, 'thpraw_regon9').text)
+        self.data.append(driver.find_element(By.ID, 'praw_regon9').text)
+        # TODO
+        # Analogicznie dla tych pól co na screenie zaznaczyłem
+        ...
+
+        address_table = []
+        # TODO
+        # To samo powtórzyć dla tabeli z danymi adresowymi
+        ...
+
+        print(self.col_names)
+        print(self.data)
+
+    # TODO
+    # Sklepać funkcyjke która to spakuje do jednego DF
+    # Możesz od razu na DF działać zamiast na listach, to wtedy bez tego
