@@ -1,3 +1,9 @@
+"""
+component_1.py
+====================================
+This module is used to scrape information from the REGON database.
+"""
+
 import re
 import pandas as pd
 from typing import Union
@@ -9,7 +15,12 @@ from selenium.webdriver.support import expected_conditions as ec
 
 
 def check_nip_regon_krs(value: str) -> Union[str, None]:
-    value = str(value)
+    """
+    Check whether a given string is a valid NIP, REGON, or KRS number.
+
+    :param value: The string to be checked.
+    :return: The type of the number if it is valid (NIP, REGON, or KRS), or None if it is not a valid identifier.
+    """
     if len(value) == 10 and re.match(r'^\d{10}$', value):
         weights = [6, 5, 7, 2, 3, 4, 5, 6, 7]
         checksum = sum(int(value[i]) * weights[i] for i in range(9)) % 11
@@ -29,6 +40,20 @@ def check_nip_regon_krs(value: str) -> Union[str, None]:
 
 
 class RegonDatabaseScrapper:
+    """
+    This class is used to create a scrapper that scrapes information about entities from the REGON database.
+    It is initialised with the following parameters
+
+    Args:
+        filepath (str): The path to the file from which the data will be loaded.
+
+    Attributes:
+        filepath (str): The path to the file from which the data will be loaded.
+        data (pandas.DataFrame): The DataFrame where the scraped data will be stored.
+        key_type (dict): The dictionary containing the keys and their corresponding identifiers used for crawling.
+        entity_type (dict): The dictionary containing the entity types and their corresponding identifiers used
+                            for scarping.
+    """
     def __init__(self, filepath: str):
         self.filepath = filepath
         self.data = pd.DataFrame(columns=[
@@ -47,25 +72,37 @@ class RegonDatabaseScrapper:
             'nr_nieruchomosci',
             'kod_pocztowy'
         ])
+        self.key_type = {
+            'NIP': 'txtNip',
+            'REGON': 'txtRegon',
+            'KRS': 'txtKrs'
+        }
+        self.entity_type = {
+            'tblRaportJFizyczna': 'fiz',
+            'tblRaportJPrawna': 'praw',
+            'tblRaportJLokalnaPrawnej': 'lokpraw',
+            'tblRaportJLokalnaFizycznej': 'lokfiz'
+        }
 
-    def get_entity_info(self):
-        with open(self.filepath, 'r') as f:
-            for line in f:
-                self._get_data(line.strip())
-            print(self.data)
+    def _identify_entity_type(self, driver: webdriver) -> Union[str, None]:
+        """
+            Private method used to identify the type of the entity in the database.
 
-    def _identify_entity_type(self, driver: webdriver):
-        if 'block' in driver.find_element(By.ID, 'tblRaportJFizyczna').get_attribute('style'):
-            return 'fiz'
-        elif 'block' in driver.find_element(By.ID, 'tblRaportJPrawna').get_attribute('style'):
-            return 'praw'
-        elif 'block' in driver.find_element(By.ID, 'tblRaportJLokalnaPrawnej').get_attribute('style'):
-            return 'lokpraw'
-        elif 'block' in driver.find_element(By.ID, 'tblRaportJLokalnaFizycznej').get_attribute('style'):
-            return 'lokfiz'
+            :param driver: The webdriver object used to scrape the data.
+            :return: The entity type identifier as a string.
+        """
+        for entity_id, entity_type in self.entity_type.items():
+            if 'block' in driver.find_element(By.ID, entity_id).get_attribute('style'):
+                return entity_type
         return None
 
-    def _get_data(self, key_value: str):
+    def _get_data(self, key_value: str) -> None:
+        """
+            Private method used to scrape the data from the database.
+
+            :param key_value: The key value used to search for the entity in the database.
+            :return: None.
+        """
         url = "https://wyszukiwarkaregon.stat.gov.pl/appBIR/index.aspx"
         data_type = check_nip_regon_krs(key_value)
         chrome_options = Options()
@@ -73,22 +110,12 @@ class RegonDatabaseScrapper:
 
         driver = webdriver.Chrome(options=chrome_options)
         driver.get(url)
+        input_data = WebDriverWait(driver, 10).until(
+            ec.presence_of_element_located((By.ID, self.key_type[data_type])))
+        input_data.send_keys(str(key_value))
 
-        if data_type == 'NIP':
-            input_data = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, "txtNip")))
-            submit_button = driver.find_element(By.ID, "btnSzukaj")
-            input_data.send_keys(str(key_value))
-            submit_button.click()
-        elif data_type == 'REGON':
-            input_data = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, "txtRegon")))
-            submit_button = driver.find_element(By.ID, "btnSzukaj")
-            input_data.send_keys(str(key_value))
-            submit_button.click()
-        elif data_type == 'KRS':
-            input_data = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, "txtKrs")))
-            submit_button = driver.find_element(By.ID, "btnSzukaj")
-            input_data.send_keys(str(key_value))
-            submit_button.click()
+        submit_button = driver.find_element(By.ID, "btnSzukaj")
+        submit_button.click()
 
         WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'tabelaZbiorczaListaJednostek')))
 
@@ -103,10 +130,17 @@ class RegonDatabaseScrapper:
         self._get_legal_entity_details(driver)
         driver.quit()
 
-    def _get_legal_entity_details(self, driver: webdriver):
+    def _get_legal_entity_details(self, driver: webdriver) -> None:
+        """
+            Private method used to extract the legal entity details from the scraped page.
+
+            :param driver: The webdriver object used to scrape the data.
+            :return: None.
+        """
         entity_type = self._identify_entity_type(driver)
         row_data = []
-        if(entity_type):
+
+        if entity_type:
             # REGON
             row_data.append(driver.find_element(By.ID, f'{entity_type}_regon9').text)
             # NIP
@@ -137,3 +171,16 @@ class RegonDatabaseScrapper:
             row_data.append(driver.find_element(By.ID, f'{entity_type}_adSiedzKodPocztowy').text)
 
         self.data.loc[len(self.data)] = row_data
+
+    def get_entity_info(self) -> pd.DataFrame:
+        """
+            Public method used to scrape the data from the database and return it as a pandas DataFrame.
+
+            :param: None.
+            :return: The scraped data as a pandas DataFrame.
+        """
+        with open(self.filepath, 'r') as f:
+            for line in f:
+                self._get_data(line.strip())
+
+        return self.data
