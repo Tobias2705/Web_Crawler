@@ -72,6 +72,9 @@ class RegonScrapper:
         self.filepath = filepath
         self.local_regons = []
         self.rows = 0
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        self.driver = webdriver.Chrome(options=chrome_options)
         self.entity_data = pd.DataFrame(columns=[
             'regon',
             'nip',
@@ -154,35 +157,33 @@ class RegonScrapper:
         """
         url = "https://wyszukiwarkaregon.stat.gov.pl/appBIR/index.aspx"
         data_type = check_nip_regon_krs(key_value)
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        driver = webdriver.Chrome(options=chrome_options)
-        driver.implicitly_wait(10)
-        driver.get(url)
-        input_data = driver.find_element(By.ID, self.key_type[data_type])
+        self.driver.implicitly_wait(10)
+        self.driver.get(url)
+        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.ID, self.key_type[data_type])))
+        input_data = self.driver.find_element(By.ID, self.key_type[data_type])
         input_data.send_keys(str(key_value))
 
-        submit_button = driver.find_element(By.ID, "btnSzukaj")
+        submit_button = self.driver.find_element(By.ID, "btnSzukaj")
         submit_button.click()
 
-        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'tabelaZbiorczaListaJednostek')))
+        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME,
+                                                                             'tabelaZbiorczaListaJednostek')))
 
-        table_body = driver.find_element(By.CLASS_NAME, 'tabelaZbiorczaListaJednostek').find_element(By.TAG_NAME,
-                                                                                                     'tbody')
+        table_body = self.driver.find_element(By.CLASS_NAME, 'tabelaZbiorczaListaJednostek').find_element(By.TAG_NAME,
+                                                                                                          'tbody')
         rows = table_body.find_elements(By.TAG_NAME, 'tr')
         self.rows = len(rows)
 
         regon_link = rows[idx].find_element(By.TAG_NAME, 'a')
         regon_link.click()
 
-        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'tabelaRaportWewn')))
+        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'tabelaRaportWewn')))
 
-        entity_type = self._identify_entity_type(driver)
+        entity_type = self._identify_entity_type(self.driver)
 
-        self._get_entity_details(driver, entity_type)
+        self._get_entity_details(self.driver, entity_type)
 
-        self._check_if_local_entities_exist(driver, entity_type)
-        driver.quit()
+        self._check_if_local_entities_exist(self.driver, entity_type)
 
     def _get_entity_details(self, driver: webdriver, entity_type) -> None:
         """
@@ -290,5 +291,5 @@ class RegonScrapper:
                         for regon in self.local_regons:
                             self._get_data(regon.strip(), 0)
                     progress.update(1)
-
+        self.driver.quit()
         return self.entity_data, self.local_entity_data
