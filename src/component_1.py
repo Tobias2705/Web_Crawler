@@ -6,7 +6,7 @@ This module is used to scrape information from the REGON database.
 
 import re
 import pandas as pd
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -136,22 +136,24 @@ class RegonDatabaseScrapper:
                 return l_entity_type
         return None
 
-    def _get_data(self, key_value: str, idx: int) -> int:
+    def _get_data(self, key_value: str, idx: int) -> Tuple[int, List[str]]:
         """
             Private method used to scrape the data from the database.
 
             :param key_value: The key value used to search for the entity in the database.
             :param idx: Value specifying the number of the line to be analysed.
-            :return: Number of entities identifying themselves with a given key.
+            :return: Number of entities identifying themselves with a given key and the list of local entities regons.
         """
         url = "https://wyszukiwarkaregon.stat.gov.pl/appBIR/index.aspx"
         data_type = check_nip_regon_krs(key_value)
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         driver = webdriver.Chrome(options=chrome_options)
+        driver.implicitly_wait(10)
         driver.get(url)
-        input_data = WebDriverWait(driver, 10).until(
-            ec.presence_of_element_located((By.ID, self.key_type[data_type])))
+        input_data = driver.find_element(By.ID, self.key_type[data_type])
+        # input_data = WebDriverWait(driver, 10).until(
+        #     ec.presence_of_element_located((By.ID, self.key_type[data_type])))
         input_data.send_keys(str(key_value))
 
         submit_button = driver.find_element(By.ID, "btnSzukaj")
@@ -168,19 +170,23 @@ class RegonDatabaseScrapper:
 
         WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'tabelaRaportWewn')))
 
-        self._get_entity_details(driver)
+        entity_type = self._identify_entity_type(driver)
+
+        self._get_entity_details(driver, entity_type)
+
+        local_regons = self._check_if_local_entities_exist(driver, entity_type)
         driver.quit()
 
-        return len(rows)
+        return len(rows), local_regons
 
-    def _get_entity_details(self, driver: webdriver) -> None:
+    def _get_entity_details(self, driver: webdriver, entity_type) -> None:
         """
             Private method used to extract the entity details from the scraped page.
 
             :param driver: The webdriver object used to scrape the data.
+            :param entity_type: The local entity type identifier as a string.
             :return: None.
         """
-        entity_type = self._identify_entity_type(driver)
         row_data = []
 
         if entity_type in ['fiz', 'praw']:
@@ -240,6 +246,28 @@ class RegonDatabaseScrapper:
 
         self.local_entity_data.loc[len(self.local_entity_data)] = row_data
 
+    def _check_if_local_entities_exist(self, driver: webdriver, entity_type) -> List[str]:
+        """
+            Private method used to check if local entities exist.
+
+            :param driver: The webdriver object used to scrape the data.
+            :param entity_type: The local entity type identifier as a string.
+            :return: None.
+        """
+        local_regons = []
+        if entity_type in ['fiz', 'praw']:
+            if 'table' in driver.find_element(By.ID, f'{entity_type}_lokTable').get_attribute('style'):
+                list_button = driver.find_element(By.ID, f'{entity_type}_butLinkLok')
+                list_button.click()
+                WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, f'{entity_type}_lok')))
+                td = driver.find_element(By.ID, f'{entity_type}_lok')
+                body = td.find_element(By.TAG_NAME, 'tbody')
+                rows = body.find_elements(By.TAG_NAME, 'tr')
+                for row in rows:
+                    local_regons.append(row.find_element(By.TAG_NAME, 'a').text)
+        return local_regons
+
+
     def get_entity_info(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
             Public method used to scrape the data from the database and return it as a pandas DataFrame.
@@ -249,8 +277,12 @@ class RegonDatabaseScrapper:
         """
         with open(self.filepath, 'r') as f:
             for line in f:
-                rows_num = self._get_data(line.strip(), 0)
+                rows_num, local_regons = self._get_data(line.strip(), 0)
+                for regon in local_regons:
+                    self._get_data(regon.strip(), 0)
                 for idx in range(1, rows_num):
-                    self._get_data(line.strip(), idx)
+                    _, local_regons = self._get_data(line.strip(), idx)
+                    for regon in local_regons:
+                        self._get_data(regon.strip(), 0)
 
         return self.entity_data, self.local_entity_data
