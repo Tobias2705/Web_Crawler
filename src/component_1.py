@@ -5,14 +5,13 @@ This module is used to scrape information from the REGON database.
 """
 
 import re
+import time
 import pandas as pd
 from tqdm import tqdm
 from typing import Union, Tuple
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 
 def check_nip_regon_krs(value: str) -> Union[str, None]:
@@ -75,7 +74,7 @@ class RegonScrapper:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         self.driver = webdriver.Chrome(options=chrome_options)
-        self.driver.implicitly_wait(10)
+        self.driver.implicitly_wait(30)
         self.entity_data = pd.DataFrame(columns=[
             'regon',
             'nip',
@@ -161,16 +160,18 @@ class RegonScrapper:
             :param idx: Value specifying the number of the line to be analysed.
             :return: None.
         """
-        url = "https://wyszukiwarkaregon.stat.gov.pl/appBIR/index.aspx"
         data_type = check_nip_regon_krs(key_value)
-        self.driver.get(url)
-        input_data = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.ID, self.key_type[data_type]))
-        )
+        self.driver.get("https://wyszukiwarkaregon.stat.gov.pl/appBIR/index.aspx")
+        self.driver.delete_all_cookies()
+        self.driver.execute_script("window.localStorage.clear()")
+
+        input_data = self.driver.find_element(By.ID, self.key_type[data_type])
+        time.sleep(0.5)
         input_data.send_keys(str(key_value))
 
         submit_button = self.driver.find_element(By.ID, "btnSzukaj")
         submit_button.click()
+        time.sleep(0.5)
 
         table_body = self.driver.find_element(By.CLASS_NAME, 'tabelaZbiorczaListaJednostek').find_element(By.TAG_NAME,
                                                                                                           'tbody')
@@ -179,6 +180,7 @@ class RegonScrapper:
 
         regon_link = rows[idx].find_element(By.TAG_NAME, 'a')
         regon_link.click()
+        time.sleep(0.5)
 
         entity_type = self._identify_entity_type(self.driver)
 
@@ -266,6 +268,7 @@ class RegonScrapper:
             if 'table' in driver.find_element(By.ID, f'{entity_type}_lokTable').get_attribute('style'):
                 list_button = driver.find_element(By.ID, f'{entity_type}_butLinkLok')
                 list_button.click()
+                time.sleep(0.5)
                 td = driver.find_element(By.ID, f'{entity_type}_lok')
                 body = td.find_element(By.TAG_NAME, 'tbody')
                 rows = body.find_elements(By.TAG_NAME, 'tr')
@@ -282,6 +285,7 @@ class RegonScrapper:
             :return: None.
         """
         driver.find_element(By.ID, f'{entity_type}_butLinkDzial').click()
+        time.sleep(0.5)
         td = driver.find_element(By.ID, f'{entity_type}_dzial')
         tables = td.find_elements(By.TAG_NAME, 'table')
         for table in tables:
