@@ -7,11 +7,13 @@ This module is used to scrape information from the REGON database.
 import re
 import time
 import pandas as pd
+from selenium.webdriver.support.wait import WebDriverWait
 from tqdm import tqdm
 from typing import Union, Tuple
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
 
 
 def check_nip_regon_krs(value: str) -> Union[str, None]:
@@ -43,9 +45,9 @@ def check_nip_regon_krs(value: str) -> Union[str, None]:
     return None
 
 
-class RegonScrapper:
+class RegonScraper:
     """
-    This class is used to create a scrapper that scrapes information about entities from the REGON database.
+    This class is used to create a scraper that scrapes information about entities from the REGON database.
     It is initialised with the following parameters
 
     Args:
@@ -64,7 +66,7 @@ class RegonScrapper:
 
     def __init__(self, filepath: str):
         """
-        Initializes the RegonScrapper class.
+        Initializes the RegonScraper class.
 
         :param filepath: The path to the file from which the data will be loaded.
         """
@@ -135,10 +137,9 @@ class RegonScrapper:
             :param driver: The webdriver object used to scrape the data.
             :return: The entity type identifier as a string.
         """
-        for entity_id, entity_type in self.entity_type.items():
-            if 'block' in driver.find_element(By.ID, entity_id).get_attribute('style'):
-                return entity_type
-        return None
+        entity_type = next((entity_type for entity_id, entity_type in self.entity_type.items() if
+                            'block' in driver.find_element(By.ID, entity_id).get_attribute('style')), None)
+        return entity_type
 
     def _identify_local_entity_type(self, driver: webdriver) -> Union[str, None]:
         """
@@ -147,10 +148,9 @@ class RegonScrapper:
             :param driver: The webdriver object used to scrape the data.
             :return: The local entity type identifier as a string.
         """
-        for l_entity_id, l_entity_type in self.local_entity_type.items():
-            if 'table' in driver.find_element(By.ID, l_entity_id).get_attribute('style'):
-                return l_entity_type
-        return None
+        l_entity_type = next((l_entity_type for l_entity_id, l_entity_type in self.local_entity_type.items() if
+                              'table' in driver.find_element(By.ID, l_entity_id).get_attribute('style')), None)
+        return l_entity_type
 
     def _get_data(self, key_value: str, idx: int):
         """
@@ -165,7 +165,7 @@ class RegonScrapper:
         self.driver.delete_all_cookies()
         self.driver.execute_script("window.localStorage.clear()")
 
-        input_data = self.driver.find_element(By.ID, self.key_type[data_type])
+        input_data = WebDriverWait(self.driver, 30).until(ec.element_to_be_clickable((By.ID, self.key_type[data_type])))
         time.sleep(0.5)
         input_data.send_keys(str(key_value))
 
