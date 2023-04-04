@@ -289,7 +289,10 @@ class RegonScrapper:
         td = driver.find_element(By.ID, f'{entity_type}_dzial')
         tables = td.find_elements(By.TAG_NAME, 'table')
         for table in tables:
-            rows = table.find_element(By.TAG_NAME, 'tbody').find_elements(By.TAG_NAME, 'tr')
+            body = table.find_element(By.TAG_NAME, 'tbody')
+            self.driver.implicitly_wait(.1)
+            rows = body.find_elements(By.TAG_NAME, 'tr')
+            self.driver.implicitly_wait(30)
             for row in rows:
                 data = row.find_elements(By.TAG_NAME, 'td')
                 self.pkd.loc[len(self.pkd)] = [regon, data[0].text, data[1].text]
