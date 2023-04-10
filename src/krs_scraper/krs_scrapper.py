@@ -86,5 +86,5 @@ class KrsScrapper:
         return representants
 
         
-scraper = KrsScrapper(5261184467, 'NIP')
-print(scraper.scrap())
+# scraper = KrsScrapper(5261184467, 'NIP')
+# print(scraper.scrap())
