@@ -48,13 +48,6 @@ def get_href_links(tax_identifier):
                 shareholders.append(name)
             print(shareholders)
             
-with open('accounts.txt', 'r') as f:
-    account_numbers = [line.strip() for line in f.readlines()]
-for ac in account_numbers:
-    get_href_links(ac)
-
-
-# In[28]:
 
 
 
