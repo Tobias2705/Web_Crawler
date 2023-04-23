@@ -45,7 +45,7 @@ class InfoStrefaScrapper:
                 self.driver.get(
                     f"https://infostrefa.com/infostrefa/pl/wiadomosci/szukaj/1?company={entity_id}&category=wszystko")
             else:
-                self.driver.get()
+                continue
             self._get_news_links()
             self._get_news(entity_name)
         print(self.news)
