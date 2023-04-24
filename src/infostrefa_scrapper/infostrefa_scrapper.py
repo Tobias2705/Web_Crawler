@@ -1,15 +1,23 @@
+import time
 import pandas as pd
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options as firefoxOptions
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
 from bs4 import BeautifulSoup
+from typing import List
 
 
 class InfoStrefaScrapper:
-    def __init__(self, entities: str):
+    def __init__(self, entities: List[str]):
         chrome_options = Options()
         chrome_options.add_argument("--headless")
+        firefox_options = firefoxOptions()
+        firefox_options.add_argument("--headless")
         self.driver = webdriver.Chrome(options=chrome_options)
+        self.firefoxDriver = webdriver.Firefox(options=firefox_options)
         self.driver.implicitly_wait(30)
         self.news_links = []
         self.entities = entities
@@ -39,15 +47,15 @@ class InfoStrefaScrapper:
         self.driver.execute_script("window.localStorage.clear()")
         self.driver.find_element(By.ID, 'rodoButtonAccept').click()
         for entity in self.entities:
-            entity_name = entity.replace("SPÓŁKA AKCYJNA", "SA").replace("ALTERNATYWNA SPÓŁKA INWESTYCYJNA", "ASI")
-            entity_id = self._get_entity_id(entity_name)
+            entity_isin = self._get_entity_isin(entity)
+            entity_id = self._get_entity_id(entity_isin)
             if entity_id:
                 self.driver.get(
                     f"https://infostrefa.com/infostrefa/pl/wiadomosci/szukaj/1?company={entity_id}&category=wszystko")
             else:
                 continue
             self._get_news_links()
-            self._get_news(entity_name)
+            self._get_news(entity)
         print(self.news)
 
     def _get_entity_id(self, entity):
@@ -83,9 +91,18 @@ class InfoStrefaScrapper:
                                 text += ';'
                             else:
                                 text += '\n'
-            print([entity_name, text])
             self.news.loc[len(self.news)] = [entity_name, text]
 
+    def _get_entity_isin(self, entity_name):
+        entity_name = entity_name.replace('"', '')
+        self.firefoxDriver.get("https://www.gpw.pl/spolki")
+        input = self.firefoxDriver.find_element(By.NAME, 'searchText')
+        time.sleep(0.5)
+        input.send_keys(entity_name)
+        WebDriverWait(self.firefoxDriver, 60).until(ec.invisibility_of_element_located((By.ID, 'preview-area')))
+        entity_link = self.firefoxDriver.find_element(By.XPATH, "//tbody[contains(@id, 'search-result')]/tr/td/a").get_attribute('href')
+        return entity_link.split('=')[-1]
 
-scrapper = InfoStrefaScrapper(['CD PROJEKT SPÓŁKA AKCYJNA', 'ZE PAK SPÓŁKA AKCYJNA'])
+
+scrapper = InfoStrefaScrapper(['PKOBP'])
 scrapper.get_data()
