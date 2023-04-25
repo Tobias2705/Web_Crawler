@@ -7,11 +7,10 @@ from selenium.webdriver.firefox.options import Options as firefoxOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from bs4 import BeautifulSoup
-from typing import List
 
 
 class InfoStrefaScrapper:
-    def __init__(self, entities: List[str]):
+    def __init__(self, entities: pd.DataFrame):
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         firefox_options = firefoxOptions()
@@ -23,6 +22,7 @@ class InfoStrefaScrapper:
         self.entities = entities
         self.news = pd.DataFrame(columns=[
             'spolka',
+            'data',
             'wiadomosc'
         ])
 
@@ -30,7 +30,7 @@ class InfoStrefaScrapper:
         self.news_links = []
         pages_num = self.driver.find_element(By.XPATH, "//ul[@class='pagination']/li[last()]").text
 
-        for i in range(min(int(pages_num), 20)):
+        for i in range(min(int(pages_num), 1)):
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
 
@@ -46,8 +46,8 @@ class InfoStrefaScrapper:
         self.driver.delete_all_cookies()
         self.driver.execute_script("window.localStorage.clear()")
         self.driver.find_element(By.ID, 'rodoButtonAccept').click()
-        for entity in self.entities:
-            entity_isin = self._get_entity_isin(entity)
+        for entity in self.entities.itertuples():
+            entity_isin = self._get_entity_isin(entity.nazwa)
             entity_id = self._get_entity_id(entity_isin)
             if entity_id:
                 self.driver.get(
@@ -55,10 +55,10 @@ class InfoStrefaScrapper:
             else:
                 continue
             self._get_news_links()
-            self._get_news(entity)
+            self._get_news(entity.nip)
         print(self.news)
 
-    def _get_entity_id(self, entity):
+    def _get_entity_id(self, entity: str):
         self.driver.get("https://infostrefa.com/infostrefa/pl/spolki")
         html = self.driver.page_source
         soup = BeautifulSoup(html, 'html.parser')
@@ -91,18 +91,24 @@ class InfoStrefaScrapper:
                                 text += ';'
                             else:
                                 text += '\n'
-            self.news.loc[len(self.news)] = [entity_name, text]
+            date = soup.find('div', {'class': 'text-date'}).text
+            self.news.loc[len(self.news)] = [entity_name, date, text]
 
-    def _get_entity_isin(self, entity_name):
+    def _get_entity_isin(self, entity_name: str):
         entity_name = entity_name.replace('"', '')
         self.firefoxDriver.get("https://www.gpw.pl/spolki")
-        input = self.firefoxDriver.find_element(By.NAME, 'searchText')
+        search_input = self.firefoxDriver.find_element(By.NAME, 'searchText')
         time.sleep(0.5)
-        input.send_keys(entity_name)
+        search_input.send_keys(entity_name)
         WebDriverWait(self.firefoxDriver, 60).until(ec.invisibility_of_element_located((By.ID, 'preview-area')))
         entity_link = self.firefoxDriver.find_element(By.XPATH, "//tbody[contains(@id, 'search-result')]/tr/td/a").get_attribute('href')
         return entity_link.split('=')[-1]
 
 
-scrapper = InfoStrefaScrapper(['PKOBP'])
+entities = [
+    {'nazwa': 'PKOBP', 'nip': '5250007738'},
+    {'nazwa': 'CD PROJEKT SPÓŁKA AKCYJNA', 'nip': '7342867148'}
+]
+entities_data = pd.DataFrame(entities)
+scrapper = InfoStrefaScrapper(entities_data)
 scrapper.get_data()
