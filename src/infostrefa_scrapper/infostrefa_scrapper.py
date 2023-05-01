@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 class InfoStrefaScrapper:
     def __init__(self, entities: pd.DataFrame):
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         firefox_options = firefoxOptions()
         firefox_options.add_argument("--headless")
         self.driver = webdriver.Chrome(options=chrome_options)
@@ -56,7 +56,9 @@ class InfoStrefaScrapper:
                 continue
             self._get_news_links()
             self._get_news(entity.nip)
-        print(self.news)
+        self.driver.quit()
+        self.firefoxDriver.quit()
+        return self.news
 
     def _get_entity_id(self, entity: str):
         self.driver.get("https://infostrefa.com/infostrefa/pl/spolki")
@@ -103,12 +105,3 @@ class InfoStrefaScrapper:
         WebDriverWait(self.firefoxDriver, 60).until(ec.invisibility_of_element_located((By.ID, 'preview-area')))
         entity_link = self.firefoxDriver.find_element(By.XPATH, "//tbody[contains(@id, 'search-result')]/tr/td/a").get_attribute('href')
         return entity_link.split('=')[-1]
-
-
-entities = [
-    {'nazwa': 'PKOBP', 'nip': '5250007738'},
-    {'nazwa': 'CD PROJEKT SPÓŁKA AKCYJNA', 'nip': '7342867148'}
-]
-entities_data = pd.DataFrame(entities)
-scrapper = InfoStrefaScrapper(entities_data)
-scrapper.get_data()
