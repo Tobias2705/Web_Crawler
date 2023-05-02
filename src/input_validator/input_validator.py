@@ -52,7 +52,10 @@ def validate_checksum(value: str, num_type: str) -> bool:
                 return True
         return False
     else:
-        return True
+        if len(value) != 10:
+            return False
+        else:
+            return True
 
 
 class InputValidator:
