@@ -48,7 +48,8 @@ class InfoStrefaScrapper:
         self.driver.delete_all_cookies()
         self.driver.execute_script("window.localStorage.clear()")
         self.driver.find_element(By.ID, 'rodoButtonAccept').click()
-        for entity in self.entities.itertuples():
+        for count, entity in enumerate(self.entities.itertuples()):
+            counter = str(count+1) + '/' + str(len(self.entities))
             try:
                 entity_isin = self._get_entity_isin(entity.nazwa)
                 entity_id = self._get_entity_id(entity_isin)
@@ -60,10 +61,10 @@ class InfoStrefaScrapper:
                 self._get_news_links()
                 self._get_news(entity.nip)
                 if self.print_info:
-                    print("InfostrefaScraper scraped:", entity.nip)
+                    print(f"{counter} InfostrefaScraper scraped: {entity.nip}")
             except:
                 if self.print_info:
-                    print("InfostrefaScraper could not scrap:", entity.nip)
+                    print(f"{counter} InfostrefaScraper could not scrap: {entity.nip}")
 
         self.driver.quit()
         self.firefoxDriver.quit()
