@@ -114,7 +114,7 @@ class ScraperManager:
         self.regon_local_entity_df = regon_local_entity_df
         self.regon_pkd = regon_pkd
 
-    def get_results():
+    def get_results(self):
         results = {
             'regon_entity_df': self.regon_entity_df.copy(),
             'regon_local_entity_df': self.regon_local_entity_df.copy(),
