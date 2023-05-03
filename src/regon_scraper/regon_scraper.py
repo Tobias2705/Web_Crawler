@@ -37,6 +37,7 @@ class RegonScraper:
         self.rows = 0
         chrome_options = Options()
         chrome_options.add_argument("--headless")
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.implicitly_wait(30)
         self.entity_data = pd.DataFrame(columns=[
@@ -265,6 +266,7 @@ class RegonScraper:
         :param: None.
         :return: The scraped data as a pandas DataFrame.
         """
+        self.reset_dataframes()
         self._get_data(number, 0, num_type)
         for regon in self.local_regons:
             self._get_data(regon.strip(), 0, 'REGON')
@@ -273,3 +275,8 @@ class RegonScraper:
             for regon in self.local_regons:
                 self._get_data(regon.strip(), 0, 'REGON')
         return self.entity_data, self.local_entity_data, self.pkd
+
+    def reset_dataframes(self):
+        self.entity_data.drop(self.entity_data.index,inplace=True)
+        self.local_entity_data.drop(self.local_entity_data.index,inplace=True)
+        self.pkd.drop(self.pkd.index,inplace=True)
