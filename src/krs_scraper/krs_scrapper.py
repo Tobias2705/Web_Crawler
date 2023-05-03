@@ -20,6 +20,10 @@ xpaths = {
     'DataEntry': '//*[@id="p-panel-17-content"]/div/div/div/div[2]',
     'DataDeletion': '//*[@id="p-panel-17-content"]/div/div/div/div[4]',
     'LegalForm': '//*[@id="p-panel-16-content"]/div/div/div/div[12]',
+    'RegonInfo': '//*[@id="p-panel-16-content"]/div/div/div/div[10]',
+    'NIPInfo': '//*[@id="p-panel-16-content"]/div/div/div/div[8]',
+    'KRSInfo': '//*[@id="p-panel-16-content"]/div/div/div/div[6]',
+    'NameInfo': '//*[@id="p-panel-16-content"]/div/div/div/div[2]',
     'WWWSite': '//*[@id="p-panel-21-content"]/div/div/div/div[2]', 
     'Email': '//*[@id="p-panel-21-content"]/div/div/div/div[4]',
     'NameOfRepr': '//*[@id="p-panel-24-content"]/div/div/div/div[2]',
@@ -28,12 +32,10 @@ xpaths = {
 }
 
 class KrsScrapper:
-    def __init__(self, id, id_type, headless = True):
+    def __init__(self, headless = True):
         self.url = 'https://wyszukiwarka-krs.ms.gov.pl/'
         self.headless = headless
         self._set_driver()
-        self.id = id
-        self.id_type = id_type
 
     def _set_driver(self):
         chrome_options = Options()
@@ -44,11 +46,13 @@ class KrsScrapper:
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.fullscreen_window()
 
-    def scrap(self):
+    def scrap(self, id, id_type):
+        self.id = id
+        self.id_type = id_type
         self.driver.get(self.url)
 
         # search and input id
-        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, xpaths[self.id_type])))
+        WebDriverWait(self.driver, 2).until(ec.presence_of_element_located((By.XPATH, xpaths[self.id_type])))
         input_element = self.driver.find_element(By.XPATH, xpaths[self.id_type])
         input_element.send_keys(self.id)
 
@@ -65,17 +69,32 @@ class KrsScrapper:
 
         first_link_element = None
         try:
-            WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, xpaths['Link'])))
+            WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['Link'])))
         except:
-            print(f"Not found {self.id_type}: {self.id} in KRS.")
-            return
+            raise(f"KrsScrapper: Not found {self.id_type}: {self.id} in KRS.")
 
         self.driver.execute_script("document.getElementsByClassName('link')[0].click()")
 
         # search Forma prawna
-        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, xpaths['LegalForm'])))
+        WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['LegalForm'])))
         legal_form_element = self.driver.find_element(By.XPATH, xpaths['LegalForm'])
         legal_form = legal_form_element.text
+
+        # search namme
+        name_info_element = self.driver.find_element(By.XPATH, xpaths['NameInfo'])
+        name_info = name_info_element.text
+
+        # search KRS
+        krs_info_element = self.driver.find_element(By.XPATH, xpaths['KRSInfo'])
+        krs_info = krs_info_element.text
+
+        # search NIP
+        nip_info_element = self.driver.find_element(By.XPATH, xpaths['NIPInfo'])
+        nip_info = nip_info_element.text
+
+        # search REGON
+        regon_info_element = self.driver.find_element(By.XPATH, xpaths['RegonInfo'])
+        regon_info = regon_info_element.text
 
         # search Data wpisu do Rejestru Przedsiębiorców
         date_entry_element = self.driver.find_element(By.XPATH, xpaths['DataEntry'])
@@ -102,10 +121,11 @@ class KrsScrapper:
         wayofrepr = wayofrepr_element.text
 
         # search section with representants
-        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, xpaths['ReprSection'])))
+        WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['ReprSection'])))
         repr_section = self.driver.find_element(By.XPATH, xpaths['ReprSection'])
 
         representants = pd.DataFrame(columns=[
+            'nip',
             'nazwisko',
             'nazwisko_drugi_czlon',
             'imie_pierwsze',
@@ -115,11 +135,11 @@ class KrsScrapper:
 
         # search Członkowie reprezentacji in rows
         while True:
-            WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, '//tbody/tr')))
+            WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, '//tbody/tr')))
             rows = repr_section.find_elements(By.XPATH, '//tbody/tr')
             for row in rows:
                 columns = row.find_elements(By.TAG_NAME, 'td')
-                row_data = []
+                row_data = [nip_info]
                 for column in columns:
                     value = column.find_element(By.CLASS_NAME, 'ds-column-value').text
                     row_data.append(value)
@@ -131,15 +151,18 @@ class KrsScrapper:
             except:
                 break
 
-        result = {
-            "Forma prawna": legal_form,
-            "Data wpisu do Rejestru Przedsiębiorców": date_entry,
-            "Data wykreślenia z Rejestru Przedsiębiorców": date_removal,
-            "Nazwa organu reprezentacji": nameofrepr,
-            "Sposób reprezentacji": wayofrepr,
-            "Adres WWW": www_address,
-            "E-mail": email,
-            "Członkowie reprezentacji": representants.to_dict('records')
+        general_info = {
+            "nazwa": name_info,
+            "krs": krs_info,
+            "nip": nip_info,
+            "regon": regon_info,
+            "forma_prawna": legal_form,
+            "data_wpisu_do_rej_przeds": date_entry,
+            "data_wykr_z_rej_przeds": date_removal,
+            "nazwa_org_repr": nameofrepr,
+            "sposob_repr": wayofrepr,
+            "adr_www": www_address,
+            "email": email,
         }
 
-        return result
+        return general_info, representants
