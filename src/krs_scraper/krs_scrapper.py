@@ -52,13 +52,16 @@ class KrsScrapper:
         self.driver.get(self.url)
 
         # search and input id
-        WebDriverWait(self.driver, 2).until(ec.presence_of_element_located((By.XPATH, xpaths[self.id_type])))
+        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, xpaths[self.id_type])))
         input_element = self.driver.find_element(By.XPATH, xpaths[self.id_type])
         input_element.send_keys(self.id)
 
         # mark 'Przedsiębiorcy' checkbox
-        checkbox_element = self.driver.find_element(By.XPATH, xpaths['CheckboxP'])
-        checkbox_element.click()
+        try:            
+            checkbox_element = self.driver.find_element(By.XPATH, xpaths['CheckboxP'])
+            checkbox_element.click()
+        except:
+            pass
 
         # click search button
         search_button_element = self.driver.find_element(By.XPATH, xpaths['SearchButton'])
