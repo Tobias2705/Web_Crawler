@@ -10,11 +10,13 @@ from bs4 import BeautifulSoup
 
 
 class InfoStrefaScrapper:
-    def __init__(self, entities: pd.DataFrame):
+    def __init__(self, entities: pd.DataFrame, print_info = False):
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         firefox_options = firefoxOptions()
         firefox_options.add_argument("--headless")
+        firefox_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         self.driver = webdriver.Chrome(options=chrome_options)
         self.firefoxDriver = webdriver.Firefox(options=firefox_options)
         self.driver.implicitly_wait(30)
@@ -25,6 +27,7 @@ class InfoStrefaScrapper:
             'data',
             'wiadomosc'
         ])
+        self.print_info = print_info
 
     def _get_news_links(self):
         self.news_links = []
@@ -47,15 +50,22 @@ class InfoStrefaScrapper:
         self.driver.execute_script("window.localStorage.clear()")
         self.driver.find_element(By.ID, 'rodoButtonAccept').click()
         for entity in self.entities.itertuples():
-            entity_isin = self._get_entity_isin(entity.nazwa)
-            entity_id = self._get_entity_id(entity_isin)
-            if entity_id:
-                self.driver.get(
-                    f"https://infostrefa.com/infostrefa/pl/wiadomosci/szukaj/1?company={entity_id}&category=wszystko")
-            else:
-                continue
-            self._get_news_links()
-            self._get_news(entity.nip)
+            try:
+                entity_isin = self._get_entity_isin(entity.nazwa)
+                entity_id = self._get_entity_id(entity_isin)
+                if entity_id:
+                    self.driver.get(
+                        f"https://infostrefa.com/infostrefa/pl/wiadomosci/szukaj/1?company={entity_id}&category=wszystko")
+                else:
+                    continue
+                self._get_news_links()
+                self._get_news(entity.nip)
+                if self.print_info:
+                    print("InfostrefaScraper scraped:", entity.nip)
+            except:
+                if self.print_info:
+                    print("InfostrefaScraper could not scrap:", entity.nip)
+
         self.driver.quit()
         self.firefoxDriver.quit()
         return self.news
