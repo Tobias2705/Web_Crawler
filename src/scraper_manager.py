@@ -127,7 +127,7 @@ class ScraperManager:
         }
         return results
 
-    def save_results(path):
+    def save_results(self, path = ''):
         for k, v in self.get_results():
             v.to_csv(os.path.join(path, k))
         

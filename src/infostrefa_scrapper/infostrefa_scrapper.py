@@ -16,7 +16,6 @@ class InfoStrefaScrapper:
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         firefox_options = firefoxOptions()
         firefox_options.add_argument("--headless")
-        firefox_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         self.driver = webdriver.Chrome(options=chrome_options)
         self.firefoxDriver = webdriver.Firefox(options=firefox_options)
         self.driver.implicitly_wait(30)
