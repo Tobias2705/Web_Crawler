@@ -89,10 +89,9 @@ class ScraperManager:
                 general_info_df.loc[len(general_info_df)] = gen_info_dict.values()
                 if self.log_scrap_info:
                     print(f"{counter} KrsScraper scraped: {row}")
-            except Exception as e:
+            except:
                 if self.log_scrap_info:
                     print(f"{counter} KrsScraper could not scrap: {row}")
-                    print(e)
 
         self.krs_representants_df = representants_df
         self.krs_general_info_df = general_info_df
