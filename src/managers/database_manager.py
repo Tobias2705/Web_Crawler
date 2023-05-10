@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import numpy as np
 import pandas as pd
 
 
@@ -25,7 +26,7 @@ class DataBaseManager:
 
         cur.execute("""
             CREATE TABLE IF NOT EXISTS podmiot(
-                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 regon TEXT,
                 nip TEXT,
                 nazwa TEXT,
@@ -61,7 +62,7 @@ class DataBaseManager:
 
         cur.execute(""" 
             CREATE TABLE IF NOT EXISTS reprezentant(
-                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 id_podmiotu INTEGER,
                 imie TEXT,
                 imie2 TEXT,
@@ -76,7 +77,7 @@ class DataBaseManager:
 
         cur.execute(""" 
             CREATE TABLE IF NOT EXISTS infostrefa(
-                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 id_podmiotu INTEGER,
                 data TEXT,
                 wiadomosc TEXT,
@@ -88,7 +89,7 @@ class DataBaseManager:
 
         cur.execute(""" 
             CREATE TABLE IF NOT EXISTS konto(
-                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 id_podmiotu INTEGER,
                 numer TEXT,
                 FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
@@ -99,7 +100,7 @@ class DataBaseManager:
 
         cur.execute("""
             CREATE TABLE IF NOT EXISTS akcjonariusz(
-                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 id_podmiotu INTEGER,
                 nazwa TEXT,
                 FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
@@ -110,7 +111,7 @@ class DataBaseManager:
 
         cur.execute("""
             CREATE TABLE IF NOT EXISTS IDpkd(
-                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 id_podmiotu INTEGER,
                 kod TEXT,
                 nazwa TEXT,
@@ -125,10 +126,12 @@ class DataBaseManager:
     def insert_entity_data(self, path):
         conn = sqlite3.connect(path)
 
-        regon_entities = pd.read_csv('output/regon_entity_df')
+        regon_entities = pd.read_csv('output/regon_entity_df', dtype={'regon': str, 'nip': str})
         regon_entities = regon_entities.iloc[:, :6]
+
         regon_entities = regon_entities.assign(data_wpisu=None, data_wykreslenia=None, adres_www=None,
                                                id_jed_nadrzednej=None, jed_lokalna=False)
+
         regon_entities.to_sql('podmiot', conn, if_exists='append', index=False)
 
         conn.commit()
@@ -163,7 +166,3 @@ if __name__ == '__main__':
     db_manager.create_db_create_tables(db_path)
     db_manager.insert_entity_data(db_path)
     #db_manager.insert_local_entity_data(db_path)
-
-    conn = sqlite3.connect(db_path)
-    cur = conn.cursor()
-    print(cur.execute('''SELECT jed_lokalna FROM podmiot''').fetchall())
