@@ -129,8 +129,7 @@ class DataBaseManager:
         regon_entities = pd.read_csv('output/regon_entity_df', dtype={'regon': str, 'nip': str})
         regon_entities = regon_entities.iloc[:, :6]
 
-        regon_entities = regon_entities.assign(data_wpisu=None, data_wykreslenia=None, adres_www=None,
-                                               id_jed_nadrzednej=None, jed_lokalna=False)
+        regon_entities = regon_entities.assign(jed_lokalna=False)
 
         regon_entities.to_sql('podmiot', conn, if_exists='append', index=False)
 
@@ -141,7 +140,7 @@ class DataBaseManager:
         conn = sqlite3.connect(path)
 
         local_regon_entities = pd.read_csv('output/regon_local_entity_df')
-        local_regon_entities = local_regon_entities.iloc[:, :6]
+
         entities_ids = []
         for index, row in local_regon_entities.iterrows():
             query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip j.nadrzędnej'])
@@ -151,11 +150,25 @@ class DataBaseManager:
             else:
                 entities_ids.append(None)
 
-        regon_entities = local_regon_entities.assign(data_wpisu=None, data_wykreslenia=None, adres_www=None,
-                                                     id_jed_nadrzednej=entities_ids, jed_lokalna=True)
+        local_regon_entities = local_regon_entities.drop(columns=['regon j.nadrzędnej', 'nip j.nadrzędnej'])
+        local_regon_entities = local_regon_entities.iloc[:, :5]
+
+        regon_entities = local_regon_entities.assign(id_jed_nadrzednej=entities_ids, jed_lokalna=True)
         regon_entities.to_sql('podmiot', conn, if_exists='append', index=False)
 
         conn.commit()
+        conn.close()
+
+    def select_from_db(self, path='', table=''):
+        conn = sqlite3.connect(path)
+        cur = conn.cursor()
+
+        cur.execute(f'SELECT * FROM {table}')
+        results = cur.fetchall()
+
+        for row in results:
+            print(row)
+
         conn.close()
 
 
@@ -165,4 +178,6 @@ if __name__ == '__main__':
 
     db_manager.create_db_create_tables(db_path)
     db_manager.insert_entity_data(db_path)
-    #db_manager.insert_local_entity_data(db_path)
+    db_manager.insert_local_entity_data(db_path)
+
+    db_manager.select_from_db(path=db_path, table='podmiot')
