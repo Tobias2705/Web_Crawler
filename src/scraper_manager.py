@@ -7,6 +7,7 @@ from regon_scraper.regon_scraper import RegonScraper
 from threading import Thread
 import pandas as pd
 import os
+import sqlite3
 
 class ScraperManager:
     def __init__(self, input_path, log_scrap_info = False):
@@ -133,13 +134,102 @@ class ScraperManager:
         }
         return results
 
-    def save_results(self, path = ''):
+    def save_to_csv(self, path = ''):
         for k, v in self.get_results().items():
             v.to_csv(os.path.join(path, k), index=False)
+
+    def create_db_create_tables(self, path):
+        con = sqlite3.connect(path)
+        cur = con.cursor()
+
+        cur.execute("DROP TABLE IF EXISTS podmioty")
+        cur.execute("DROP TABLE IF EXISTS reprezentanci")
+        cur.execute("DROP TABLE IF EXISTS depeszeinfostrefy")
+        cur.execute("DROP TABLE IF EXISTS kontabankowe")
+        cur.execute("DROP TABLE IF EXISTS akcjonariusze")
+        cur.execute("DROP TABLE IF EXISTS pkd")
+
+        cur.execute("""
+            CREATE TABLE podmioty(
+                id INTEGER PRIMARY KEY,
+                nip TEXT,
+                nazwa TEXT,
+                kod_i_nazwa_podstawowej_formy_prawnej TEXT,
+                kod_i_nazwa_szczegolnej_formy_prawnej TEXT,
+                kod_i_nazwa_formy_wlasnosci TEXT,
+                data_wpisu_do_rejestru_przedsiebiorcow TEXT,
+                data_wykreslenia_z_rejestru_przedsiebiorcow TEXT,
+                adres_www TEXT,
+                id_jednostki_nadrzednej INTEGER,
+                jednostka_lokalna BOOLEAN,
+                kraj TEXT,
+                wojewodztwo TEXT,
+                powiat TEXT,
+                gmina TEXT,
+                miejscowosc TEXT,
+                ulica TEXT,
+                nr TEXT,
+                kod_pocztowy TEXT,
+                FOREIGN KEY(id_jednostki_nadrzednej) REFERENCES podmioty(id)
+            )
+        """)
         
+        cur.execute(""" 
+            CREATE TABLE reprezentanci(
+                id INTEGER PRIMARY KEY,
+                id_podmiotu INTEGER,
+                imie_pierwsze TEXT,
+                imie_drugie TEXT,
+                nazwisko TEXT,
+                nazwisko_drugi_czlon TEXT,
+                funkcja TEXT,
+                FOREIGN KEY(id_podmiotu) REFERENCES podmioty(id)
+            )
+        """)
+
+        cur.execute(""" 
+            CREATE TABLE depeszeinfostrefy(
+                id INTEGER PRIMARY KEY,
+                id_podmiotu INTEGER,
+                data TEXT,
+                wiadomosc TEXT,
+                FOREIGN KEY(id_podmiotu) REFERENCES podmioty(id)
+            )
+        """)
+
+        cur.execute(""" 
+            CREATE TABLE kontabankowe(
+                id INTEGER PRIMARY KEY,
+                numer TEXT,
+                id_podmiotu INTEGER,
+                FOREIGN KEY(id_podmiotu) REFERENCES podmioty(id)
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE akcjonariusze(
+                id INTEGER PRIMARY KEY,
+                nazwa TEXT,
+                id_podmiotu INTEGER,
+                FOREIGN KEY(id_podmiotu) REFERENCES podmioty(id)
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE pkd(
+                id INTEGER PRIMARY KEY,
+                kod TEXT,
+                nazwa TEXT,
+                id_podmiotu INTEGER,
+                FOREIGN KEY(id_podmiotu) REFERENCES podmioty(id)
+            )
+        """)
 
 if __name__ == '__main__':
     manager = ScraperManager('input.txt', log_scrap_info=True)
-    manager.scrap()
-    manager.save_results(path='C:\\Users\\kaczm\\Documents\\sem1-tpd\\hurtownie\\Web_Crawler\\output')
+    # manager.scrap()
+    # manager.save_to_csv(path='C:\\Users\\kaczm\\Documents\\sem1-tpd\\hurtownie\\Web_Crawler\\output')
+
+    db_path = "C:\\Users\\kaczm\\Desktop\\osint.db"
+    manager.create_db_create_tables(db_path)
     
