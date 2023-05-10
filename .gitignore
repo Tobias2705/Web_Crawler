@@ -1,3 +1,4 @@
 **/__pycache__/
+**/.idea/
 **geckodriver.log
-output/
+src/managers/output/

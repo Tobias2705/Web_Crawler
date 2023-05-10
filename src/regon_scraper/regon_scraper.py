@@ -44,9 +44,9 @@ class RegonScraper:
             'regon',
             'nip',
             'nazwa',
-            'kod_i_nazwa_podstawowej_formy_prawnej',
-            'kod_i_nazwa_szczegolnej_formy_prawnej',
-            'kod_i_nazwa_formy_wlasnosci',
+            'forma_prawna',
+            'sz_forma_prawna',
+            'forma_wlasnosci',
             'kraj',
             'wojewodztwo',
             'powiat',
@@ -61,6 +61,9 @@ class RegonScraper:
             'regon j.nadrzędnej',
             'nip j.nadrzędnej',
             'nazwa',
+            'forma_prawna',
+            'sz_forma_prawna',
+            'forma_wlasnosci',
             'kraj',
             'wojewodztwo',
             'powiat',
@@ -91,6 +94,14 @@ class RegonScraper:
             'fiz_lokTable': 'fiz_lok',
             'lokpraw': 'praw',
             'lokfiz': 'fiz'
+        }
+        self.local_entity_form = {
+            'lokpraw_p': 'nazwaPodstawowejFormyPrawnej',
+            'lokpraw_sz': 'nazwaSzczegolnejFormyPrawnej',
+            'lokpraw_wl': 'nazwaFormyWlasnosci',
+            'lokfiz_p': 'podstawowaFormaPrawna',
+            'lokfiz_sz': 'szczegolnaFormaPrawna',
+            'lokfiz_wl': 'formyWlasnosci',
         }
 
     def _identify_entity_type(self, driver: webdriver) -> Union[str, None]:
@@ -205,6 +216,12 @@ class RegonScraper:
                     driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}_regon').text,
                     driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}_nip').text,
                     driver.find_element(By.ID, f'{entity_type}_nazwa').text,
+                    driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}'
+                                               f'_{self.local_entity_form[entity_type+"_p"]}').text,
+                    driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}'
+                                               f'_{self.local_entity_form[entity_type+"_sz"]}').text,
+                    driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}'
+                                               f'_{self.local_entity_form[entity_type+"_wl"]}').text,
                     driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaKraju').text,
                     driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaWojewodztwa').text,
                     driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaPowiatu').text,
@@ -277,6 +294,12 @@ class RegonScraper:
         return self.entity_data, self.local_entity_data, self.pkd
 
     def reset_dataframes(self):
-        self.entity_data.drop(self.entity_data.index,inplace=True)
-        self.local_entity_data.drop(self.local_entity_data.index,inplace=True)
-        self.pkd.drop(self.pkd.index,inplace=True)
+        """
+        Public method used to clear pandas DataFrame during iteration.
+
+        :param: None.
+        :return: The scraped data as a pandas DataFrame.
+        """
+        self.entity_data.drop(self.entity_data.index, inplace=True)
+        self.local_entity_data.drop(self.local_entity_data.index, inplace=True)
+        self.pkd.drop(self.pkd.index, inplace=True)
