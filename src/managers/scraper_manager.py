@@ -141,4 +141,4 @@ class ScraperManager:
 if __name__ == '__main__':
     manager = ScraperManager('input.txt', log_scrap_info=True)
     manager.scrap()
-    # manager.save_to_csv(path='output/')
+    manager.save_to_csv(path='output/')

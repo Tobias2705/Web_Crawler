@@ -53,7 +53,7 @@ class RegonScraper:
             'gmina',
             'miejscowosc',
             'ulica',
-            'nr_nieruchomosci',
+            'nr',
             'kod_pocztowy'
         ])
         self.local_entity_data = pd.DataFrame(columns=[
@@ -70,7 +70,7 @@ class RegonScraper:
             'gmina',
             'miejscowosc',
             'ulica',
-            'nr_nieruchomosci',
+            'nr',
             'kod_pocztowy'
         ])
         self.pkd = pd.DataFrame(columns=[

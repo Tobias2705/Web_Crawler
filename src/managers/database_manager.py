@@ -1,166 +1,190 @@
 import os
 import sqlite3
-import numpy as np
 import pandas as pd
 
 
 class DataBaseManager:
-    def __init__(self, clear_database=False, log_info=False):
+    def __init__(self, db_path, clear_database=False):
+        self.db_path = db_path
         self.clear_database = clear_database
-        self.log_info = log_info
 
-    def create_db_create_tables(self, path):
-        conn = sqlite3.connect(path)
-        cur = conn.cursor()
+    def create_db_create_tables(self):
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cur = conn.cursor()
 
-        if self.clear_database:
-            cur.execute("DROP TABLE IF EXISTS podmiot")
-            cur.execute("DROP TABLE IF EXISTS adres")
-            cur.execute("DROP TABLE IF EXISTS reprezentant")
-            cur.execute("DROP TABLE IF EXISTS infostrefa")
-            cur.execute("DROP TABLE IF EXISTS konto")
-            cur.execute("DROP TABLE IF EXISTS akcjonariusz")
-            cur.execute("DROP TABLE IF EXISTS pkd")
-            if self.log_info:
-                print('Tables dropped')
+            if self.clear_database:
+                cur.execute("DROP TABLE IF EXISTS podmiot")
+                cur.execute("DROP TABLE IF EXISTS jednostka_lokalna")
+                cur.execute("DROP TABLE IF EXISTS reprezentant")
+                cur.execute("DROP TABLE IF EXISTS infostrefa")
+                cur.execute("DROP TABLE IF EXISTS konto")
+                cur.execute("DROP TABLE IF EXISTS akcjonariusz")
+                cur.execute("DROP TABLE IF EXISTS pkd")
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS podmiot(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                regon TEXT,
-                nip TEXT,
-                nazwa TEXT,
-                forma_prawna TEXT,
-                sz_forma_prawna TEXT,
-                forma_wlasnosci TEXT,
-                data_wpisu TEXT,
-                data_wykreslenia TEXT,
-                adres_www TEXT,
-                id_jed_nadrzednej INTEGER,
-                jed_lokalna BOOLEAN
-            )
-        """)
-        if self.log_info:
-            print('Podmiot table created')
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS podmiot(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    regon TEXT,
+                    nip TEXT,
+                    nazwa TEXT,
+                    forma_prawna TEXT,
+                    sz_forma_prawna TEXT,
+                    forma_wlasnosci TEXT,
+                    data_wpisu TEXT,
+                    data_wykreslenia TEXT,
+                    adres_www TEXT,
+                    kraj TEXT,
+                    wojewodztwo TEXT,
+                    powiat TEXT,
+                    gmina TEXT,
+                    miejscowosc TEXT,
+                    ulica TEXT,
+                    nr TEXT,
+                    kod_pocztowy TEXT
+                )
+            """)
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS adres(
-                id_podmiotu INTEGER
-                kraj TEXT,
-                wojewodztwo TEXT,
-                powiat TEXT,
-                gmina TEXT,
-                miejscowosc TEXT,
-                ulica TEXT,
-                nr TEXT,
-                kod_pocztowy TEXT,
-                FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
-            )
-        """)
-        if self.log_info:
-            print('Adres table created...')
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS jednostka_lokalna(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_jed_nadrzednej INTEGER,
+                    regon TEXT,
+                    nazwa TEXT,
+                    forma_prawna TEXT,
+                    sz_forma_prawna TEXT,
+                    forma_wlasnosci TEXT,
+                    kraj TEXT,
+                    wojewodztwo TEXT,
+                    powiat TEXT,
+                    gmina TEXT,
+                    miejscowosc TEXT,
+                    ulica TEXT,
+                    nr TEXT,
+                    kod_pocztowy TEXT,
+                    FOREIGN KEY(id_jed_nadrzednej) REFERENCES podmiot(id)
+                )
+            """)
 
-        cur.execute(""" 
-            CREATE TABLE IF NOT EXISTS reprezentant(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_podmiotu INTEGER,
-                imie TEXT,
-                imie2 TEXT,
-                nazwisko TEXT,
-                nazwisko2 TEXT,
-                funkcja TEXT,
-                FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
-            )
-        """)
-        if self.log_info:
-            print('Reprezentant table created')
+            cur.execute(""" 
+                CREATE TABLE IF NOT EXISTS reprezentant(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_podmiotu INTEGER,
+                    imie TEXT,
+                    imie2 TEXT,
+                    nazwisko TEXT,
+                    nazwisko2 TEXT,
+                    funkcja TEXT,
+                    FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
+                )
+            """)
 
-        cur.execute(""" 
-            CREATE TABLE IF NOT EXISTS infostrefa(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_podmiotu INTEGER,
-                data TEXT,
-                wiadomosc TEXT,
-                FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
-            )
-        """)
-        if self.log_info:
-            print('Infostrefa table created')
+            cur.execute(""" 
+                CREATE TABLE IF NOT EXISTS infostrefa(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_podmiotu INTEGER,
+                    data TEXT,
+                    wiadomosc TEXT,
+                    FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
+                )
+            """)
 
-        cur.execute(""" 
-            CREATE TABLE IF NOT EXISTS konto(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_podmiotu INTEGER,
-                numer TEXT,
-                FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
-            )
-        """)
-        if self.log_info:
-            print('Konto table created')
+            cur.execute(""" 
+                CREATE TABLE IF NOT EXISTS konto(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_podmiotu INTEGER,
+                    numer TEXT,
+                    FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
+                )
+            """)
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS akcjonariusz(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_podmiotu INTEGER,
-                nazwa TEXT,
-                FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
-            )
-        """)
-        if self.log_info:
-            print('Akcjonariusz table created')
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS akcjonariusz(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_podmiotu INTEGER,
+                    nazwa TEXT,
+                    FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
+                )
+            """)
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS IDpkd(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_podmiotu INTEGER,
-                kod TEXT,
-                nazwa TEXT,
-                FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
-            )
-        """)
-        if self.log_info:
-            print('PKD table created')
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS IDpkd(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_podmiotu INTEGER,
+                    kod TEXT,
+                    nazwa TEXT,
+                    FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
+                )
+            """)
 
-        conn.close()
+            cur.close()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to initialize sqlite tables - {error}")
 
-    def insert_entity_data(self, path):
-        conn = sqlite3.connect(path)
+    def insert_entity_data(self):
+        try:
+            conn = sqlite3.connect(self.db_path)
 
-        regon_entities = pd.read_csv('output/regon_entity_df', dtype={'regon': str, 'nip': str})
-        regon_entities = regon_entities.iloc[:, :6]
+            regon_entities_df = pd.read_csv('output/regon_entity_df', dtype={'regon': str, 'nip': str})
+            regon_entities_df.to_sql('podmiot', conn, if_exists='append', index=False)
 
-        regon_entities = regon_entities.assign(jed_lokalna=False)
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert entities into table podmiot - {error}")
 
-        regon_entities.to_sql('podmiot', conn, if_exists='append', index=False)
+    def insert_local_entity_data(self):
+        try:
+            conn = sqlite3.connect(self.db_path)
 
-        conn.commit()
-        conn.close()
+            local_regon_entities_df = pd.read_csv('output/regon_local_entity_df', dtype={'regon': str, 'nip': str})
 
-    def insert_local_entity_data(self, path):
-        conn = sqlite3.connect(path)
+            entities_ids = []
+            for index, row in local_regon_entities_df.iterrows():
+                query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip j.nadrzędnej'])
+                result = conn.execute(query).fetchall()
+                if result:
+                    entities_ids.append(result[0][0])
+                else:
+                    entities_ids.append(None)
 
-        local_regon_entities = pd.read_csv('output/regon_local_entity_df')
+            local_regon_entities = local_regon_entities_df.drop(columns=['regon j.nadrzędnej', 'nip j.nadrzędnej'])
 
-        entities_ids = []
-        for index, row in local_regon_entities.iterrows():
-            query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip j.nadrzędnej'])
-            result = conn.execute(query).fetchall()
-            if result:
-                entities_ids.append(result[0][0])
-            else:
-                entities_ids.append(None)
+            regon_entities = local_regon_entities.assign(id_jed_nadrzednej=entities_ids)
+            regon_entities.to_sql('jednostka_lokalna', conn, if_exists='append', index=False)
 
-        local_regon_entities = local_regon_entities.drop(columns=['regon j.nadrzędnej', 'nip j.nadrzędnej'])
-        local_regon_entities = local_regon_entities.iloc[:, :5]
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert local entities into table jednostka_lokalna - {error}")
 
-        regon_entities = local_regon_entities.assign(id_jed_nadrzednej=entities_ids, jed_lokalna=True)
-        regon_entities.to_sql('podmiot', conn, if_exists='append', index=False)
+    def insert_general_entities_info(self):
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cur = conn.cursor()
 
-        conn.commit()
-        conn.close()
+            krs_general_df = pd.read_csv('output/krs_general_info_df', dtype={'regon': str, 'nip': str, 'krs': str})
+            for index, row in krs_general_df.iterrows():
+                nip = row['nip']
+                query = "SELECT id FROM podmiot WHERE nip='{}'".format(nip)
+                result = conn.execute(query).fetchone()
+                if result:
+                    general_info = krs_general_df.loc[krs_general_df['nip'] == nip]
+                    update_query = """UPDATE podmiot SET data_wpisu=?, data_wykreslenia=?, adres_www=? WHERE id=?"""
+                    values = (general_info['data_wpisu_do_rej_przeds'].values[0],
+                              general_info['data_wykr_z_rej_przeds'].values[0],
+                              general_info['adr_www'].values[0], str(result[0]))
+                    cur.execute(update_query, values)
+                    conn.commit()
 
-    def select_from_db(self, path='', table=''):
-        conn = sqlite3.connect(path)
+            cur.close()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert additional entities data into table podmiot - {error}")
+
+    def select_from_db(self, table=''):
+        conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
 
         cur.execute(f'SELECT * FROM {table}')
@@ -173,11 +197,18 @@ class DataBaseManager:
 
 
 if __name__ == '__main__':
-    db_manager = DataBaseManager(clear_database=True, log_info=True)
-    db_path = os.getcwd() + "\\osint.db"
+    path = os.getcwd() + "\\KNF_sentiment.db"
+    db_manager = DataBaseManager(db_path=path, clear_database=True)
 
-    db_manager.create_db_create_tables(db_path)
-    db_manager.insert_entity_data(db_path)
-    db_manager.insert_local_entity_data(db_path)
+    # Initialize database
+    db_manager.create_db_create_tables()
 
-    db_manager.select_from_db(path=db_path, table='podmiot')
+    # Insert entities data
+    db_manager.insert_entity_data()
+    db_manager.insert_local_entity_data()
+
+    # Insert additional entities data (from krs)
+    db_manager.insert_general_entities_info()
+
+    db_manager.select_from_db(table='podmiot')
+    db_manager.select_from_db(table='jednostka_lokalna')
