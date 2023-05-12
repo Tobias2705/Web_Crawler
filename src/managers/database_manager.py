@@ -183,6 +183,31 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert additional entities data into table podmiot - {error}")
 
+    def insert_representatives_data(self):
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            representatives_df = pd.read_csv('output/krs_representatives_df', dtype={'nip': str})
+
+            entities_ids = []
+            for index, row in representatives_df.iterrows():
+                query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip'])
+                result = conn.execute(query).fetchall()
+                if result:
+                    entities_ids.append(result[0][0])
+                else:
+                    entities_ids.append(None)
+
+            representatives = representatives_df.drop(columns=['nip'])
+
+            representatives = representatives.assign(id_podmiotu=entities_ids)
+            representatives.to_sql('reprezentant', conn, if_exists='append', index=False)
+
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert representatives data into table reprezentant - {error}")
+
     def select_from_db(self, table=''):
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
@@ -203,12 +228,16 @@ if __name__ == '__main__':
     # Initialize database
     db_manager.create_db_create_tables()
 
-    # Insert entities data
+    # Insert entities data (from regon)
     db_manager.insert_entity_data()
     db_manager.insert_local_entity_data()
 
     # Insert additional entities data (from krs)
     db_manager.insert_general_entities_info()
 
+    # Insert representatives data (from krs)
+    db_manager.insert_representatives_data()
+
     db_manager.select_from_db(table='podmiot')
     db_manager.select_from_db(table='jednostka_lokalna')
+    db_manager.select_from_db(table='reprezentant')

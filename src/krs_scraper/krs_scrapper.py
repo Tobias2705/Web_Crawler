@@ -123,10 +123,10 @@ class KrsScrapper:
 
         representants = pd.DataFrame(columns=[
             'nip',
+            'imie',
+            'imie2',
             'nazwisko',
-            'nazwisko_drugi_czlon',
-            'imie_pierwsze',
-            'imie_drugie',
+            'nazwisko2',
             'funkcja'
         ])
 
@@ -140,7 +140,8 @@ class KrsScrapper:
                 for column in columns:
                     value = column.find_element(By.CLASS_NAME, 'ds-column-value').text
                     row_data.append(value)
-                representants.loc[len(representants)] = row_data
+                row_data_ordered = [row_data[0], row_data[3], row_data[4], row_data[1], row_data[2], row_data[5]]
+                representants.loc[len(representants)] = row_data_ordered
 
             try:
                 next_page_element = driver.find_element(By.XPATH, xpaths['NextPage'])

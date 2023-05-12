@@ -125,7 +125,7 @@ class ScraperManager:
             'regon_entity_df': self.regon_entity_df.copy(),
             'regon_local_entity_df': self.regon_local_entity_df.copy(),
             'regon_pkd_df': self.regon_pkd_df.copy(),
-            'krs_representants_df': self.krs_representants_df.copy(),
+            'krs_representatives_df': self.krs_representants_df.copy(),
             'krs_general_info_df': self.krs_general_info_df.copy(),
             'aleo_account_numbers_df': self.aleo_account_numbers_df.copy(),
             'aleo_shareholders_df': self.aleo_shareholders_df.copy(),
