@@ -22,7 +22,7 @@ class InfoStrefaScrapper:
         self.news_links = []
         self.entities = entities
         self.news = pd.DataFrame(columns=[
-            'spolka',
+            'nip',
             'data',
             'wiadomosc'
         ])
