@@ -108,7 +108,7 @@ class DataBaseManager:
             """)
 
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS IDpkd(
+                CREATE TABLE IF NOT EXISTS pkd(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     id_podmiotu INTEGER,
                     kod TEXT,
@@ -208,6 +208,31 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert representatives data into table reprezentant - {error}")
 
+    def insert_infostrefa_posts(self):
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            info_df = pd.read_csv('output/infostrefa_news_df', dtype={'nip': str})
+
+            entities_ids = []
+            for index, row in info_df.iterrows():
+                query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip'])
+                result = conn.execute(query).fetchall()
+                if result:
+                    entities_ids.append(result[0][0])
+                else:
+                    entities_ids.append(None)
+
+            info = info_df.drop(columns=['nip'])
+
+            info = info.assign(id_podmiotu=entities_ids)
+            info.to_sql('infostrefa', conn, if_exists='append', index=False)
+
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert posts data into table infostrefa - {error}")
+
     def select_from_db(self, table=''):
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
@@ -238,6 +263,10 @@ if __name__ == '__main__':
     # Insert representatives data (from krs)
     db_manager.insert_representatives_data()
 
+    # Insert posts data (from infostrefa)
+    db_manager.insert_infostrefa_posts()
+
     db_manager.select_from_db(table='podmiot')
     db_manager.select_from_db(table='jednostka_lokalna')
     db_manager.select_from_db(table='reprezentant')
+    db_manager.select_from_db(table='infostrefa')
