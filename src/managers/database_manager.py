@@ -1,12 +1,26 @@
 import os
 import sqlite3
 import pandas as pd
+from typing import List
 
 
 class DataBaseManager:
     def __init__(self, db_path, clear_database=False):
         self.db_path = db_path
         self.clear_database = clear_database
+
+    @staticmethod
+    def _find_entities(conn: sqlite3.Connection, df: pd.DataFrame, table: str, column: str, compare: str) -> List[int]:
+        entities_ids = []
+        for index, row in df.iterrows():
+            query = f"SELECT id FROM {table} WHERE {compare}='{row[column]}'"
+            result = conn.execute(query).fetchall()
+            if result:
+                entities_ids.append(result[0][0])
+            else:
+                entities_ids.append(None)
+
+        return entities_ids
 
     def create_db_create_tables(self):
         try:
@@ -140,14 +154,7 @@ class DataBaseManager:
 
             local_regon_entities_df = pd.read_csv('output/regon_local_entity_df', dtype={'regon': str, 'nip': str})
 
-            entities_ids = []
-            for index, row in local_regon_entities_df.iterrows():
-                query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip j.nadrzędnej'])
-                result = conn.execute(query).fetchall()
-                if result:
-                    entities_ids.append(result[0][0])
-                else:
-                    entities_ids.append(None)
+            entities_ids = self._find_entities(conn, local_regon_entities_df, 'podmiot', 'nip j.nadrzędnej', 'nip')
 
             local_regon_entities_df.drop(columns=['regon j.nadrzędnej', 'nip j.nadrzędnej'], inplace=True)
 
@@ -189,14 +196,7 @@ class DataBaseManager:
 
             representatives_df = pd.read_csv('output/krs_representatives_df', dtype={'nip': str})
 
-            entities_ids = []
-            for index, row in representatives_df.iterrows():
-                query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip'])
-                result = conn.execute(query).fetchall()
-                if result:
-                    entities_ids.append(result[0][0])
-                else:
-                    entities_ids.append(None)
+            entities_ids = self._find_entities(conn, representatives_df, 'podmiot', 'nip', 'nip')
 
             representatives_df.drop(columns=['nip'], inplace=True)
 
@@ -214,14 +214,7 @@ class DataBaseManager:
 
             info_df = pd.read_csv('output/infostrefa_news_df', dtype={'nip': str})
 
-            entities_ids = []
-            for index, row in info_df.iterrows():
-                query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip'])
-                result = conn.execute(query).fetchall()
-                if result:
-                    entities_ids.append(result[0][0])
-                else:
-                    entities_ids.append(None)
+            entities_ids = self._find_entities(conn, info_df, 'podmiot', 'nip', 'nip')
 
             info_df.drop(columns=['nip'], inplace=True)
 
@@ -239,14 +232,7 @@ class DataBaseManager:
 
             shareholders_df = pd.read_csv('output/aleo_shareholders_df', dtype={'nip': str})
 
-            entities_ids = []
-            for index, row in shareholders_df.iterrows():
-                query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip'])
-                result = conn.execute(query).fetchall()
-                if result:
-                    entities_ids.append(result[0][0])
-                else:
-                    entities_ids.append(None)
+            entities_ids = self._find_entities(conn, shareholders_df, 'podmiot', 'nip', 'nip')
 
             shareholders_df.drop(columns=['nip'], inplace=True)
             shareholders_df.rename(columns={'shareholder': 'nazwa'}, inplace=True)
@@ -265,14 +251,7 @@ class DataBaseManager:
 
             accounts_df = pd.read_csv('output/aleo_account_numbers_df', dtype={'nip': str})
 
-            entities_ids = []
-            for index, row in accounts_df.iterrows():
-                query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip'])
-                result = conn.execute(query).fetchall()
-                if result:
-                    entities_ids.append(result[0][0])
-                else:
-                    entities_ids.append(None)
+            entities_ids = self._find_entities(conn, accounts_df, 'podmiot', 'nip', 'nip')
 
             accounts_df.drop(columns=['nip'], inplace=True)
             accounts_df.rename(columns={'account_number': 'numer'}, inplace=True)
@@ -351,7 +330,7 @@ if __name__ == '__main__':
     db_manager.insert_infostrefa_posts()
 
     # Test printing
-    db_manager.select_from_db(table='podmiot')
+    # db_manager.select_from_db(table='podmiot')
     # db_manager.select_from_db(table='jednostka_lokalna')
     # db_manager.select_from_db(table='pkd')
     # db_manager.select_from_db(table='reprezentant')
