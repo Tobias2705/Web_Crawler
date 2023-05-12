@@ -32,100 +32,94 @@ xpaths = {
 }
 
 class KrsScrapper:
-    def __init__(self, headless = True):
+    def __init__(self, id, id_type, headless = True):
         self.url = 'https://wyszukiwarka-krs.ms.gov.pl/'
+        self.id = id
+        self.id_type = id_type
         self.headless = headless
-        self._set_driver()
 
-    def _set_driver(self):
+    def scrap(self):
         chrome_options = Options()
         if self.headless:
             chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        self.driver = webdriver.Chrome(options=chrome_options)
-        self.driver.fullscreen_window()
-
-    def scrap(self, id, id_type):
-        self.id = id
-        self.id_type = id_type
-        self.driver.get(self.url)
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.fullscreen_window()
+        driver.get(self.url)
 
         # search and input id
-        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, xpaths[self.id_type])))
-        input_element = self.driver.find_element(By.XPATH, xpaths[self.id_type])
+        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.XPATH, xpaths[self.id_type])))
+        input_element = driver.find_element(By.XPATH, xpaths[self.id_type])
         input_element.send_keys(self.id)
 
-        # mark 'Przedsiębiorcy' checkbox
-        try:            
-            checkbox_element = self.driver.find_element(By.XPATH, xpaths['CheckboxP'])
-            checkbox_element.click()
-        except:
-            pass
+        # mark 'Przedsiębiorcy' checkbox        
+        checkbox_element = driver.find_element(By.XPATH, xpaths['CheckboxP'])
+        checkbox_element.click()
 
         # click search button
-        search_button_element = self.driver.find_element(By.XPATH, xpaths['SearchButton'])
+        search_button_element = driver.find_element(By.XPATH, xpaths['SearchButton'])
         search_button_element.click()
 
         # search table's first row
-        table_element = self.driver.find_element(By.XPATH, xpaths['Table'])
+        table_element = driver.find_element(By.XPATH, xpaths['Table'])
 
         first_link_element = None
         try:
-            WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['Link'])))
+            WebDriverWait(driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['Link'])))
         except:
             raise(f"KrsScrapper: Not found {self.id_type}: {self.id} in KRS.")
 
-        self.driver.execute_script("document.getElementsByClassName('link')[0].click()")
+        driver.execute_script("document.getElementsByClassName('link')[0].click()")
 
         # search Forma prawna
-        WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['LegalForm'])))
-        legal_form_element = self.driver.find_element(By.XPATH, xpaths['LegalForm'])
+        WebDriverWait(driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['LegalForm'])))
+        legal_form_element = driver.find_element(By.XPATH, xpaths['LegalForm'])
         legal_form = legal_form_element.text
 
         # search namme
-        name_info_element = self.driver.find_element(By.XPATH, xpaths['NameInfo'])
+        name_info_element = driver.find_element(By.XPATH, xpaths['NameInfo'])
         name_info = name_info_element.text
 
         # search KRS
-        krs_info_element = self.driver.find_element(By.XPATH, xpaths['KRSInfo'])
+        krs_info_element = driver.find_element(By.XPATH, xpaths['KRSInfo'])
         krs_info = krs_info_element.text
 
         # search NIP
-        nip_info_element = self.driver.find_element(By.XPATH, xpaths['NIPInfo'])
+        nip_info_element = driver.find_element(By.XPATH, xpaths['NIPInfo'])
         nip_info = nip_info_element.text
 
         # search REGON
-        regon_info_element = self.driver.find_element(By.XPATH, xpaths['RegonInfo'])
+        regon_info_element = driver.find_element(By.XPATH, xpaths['RegonInfo'])
         regon_info = regon_info_element.text
 
         # search Data wpisu do Rejestru Przedsiębiorców
-        date_entry_element = self.driver.find_element(By.XPATH, xpaths['DataEntry'])
+        date_entry_element = driver.find_element(By.XPATH, xpaths['DataEntry'])
         date_entry = date_entry_element.text
 
         # search Data wykreślenia z Rejestru Przedsiębiorców
-        date_removal_element = self.driver.find_element(By.XPATH, xpaths['DataDeletion'])
+        date_removal_element = driver.find_element(By.XPATH, xpaths['DataDeletion'])
         date_removal = date_removal_element.text
 
         # search Adres WWW
-        www_address_element = self.driver.find_element(By.XPATH, xpaths['WWWSite'])
+        www_address_element = driver.find_element(By.XPATH, xpaths['WWWSite'])
         www_address = www_address_element.text
 
         # seach E-mail
-        email_element = self.driver.find_element(By.XPATH, xpaths['Email'])
+        email_element = driver.find_element(By.XPATH, xpaths['Email'])
         email = email_element.text
 
         # search Nazwa organu reprezentacji
-        nameofrepr_element = self.driver.find_element(By.XPATH, xpaths['NameOfRepr'])
+        nameofrepr_element = driver.find_element(By.XPATH, xpaths['NameOfRepr'])
         nameofrepr = nameofrepr_element.text
 
         # search Sposób reprezentacji
-        wayofrepr_element = self.driver.find_element(By.XPATH, xpaths['WayOfRepr'])
+        wayofrepr_element = driver.find_element(By.XPATH, xpaths['WayOfRepr'])
         wayofrepr = wayofrepr_element.text
 
         # search section with representants
-        WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['ReprSection'])))
-        repr_section = self.driver.find_element(By.XPATH, xpaths['ReprSection'])
+        WebDriverWait(driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['ReprSection'])))
+        repr_section = driver.find_element(By.XPATH, xpaths['ReprSection'])
 
         representants = pd.DataFrame(columns=[
             'nip',
@@ -138,7 +132,7 @@ class KrsScrapper:
 
         # search Członkowie reprezentacji in rows
         while True:
-            WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, '//tbody/tr')))
+            WebDriverWait(driver, 5).until(ec.presence_of_element_located((By.XPATH, '//tbody/tr')))
             rows = repr_section.find_elements(By.XPATH, '//tbody/tr')
             for row in rows:
                 columns = row.find_elements(By.TAG_NAME, 'td')
@@ -149,8 +143,8 @@ class KrsScrapper:
                 representants.loc[len(representants)] = row_data
 
             try:
-                next_page_element = self.driver.find_element(By.XPATH, xpaths['NextPage'])
-                self.driver.execute_script("document.getElementsByClassName('p-paginator-next p-paginator-element p-link p-ripple')[0].click()")
+                next_page_element = driver.find_element(By.XPATH, xpaths['NextPage'])
+                driver.execute_script("document.getElementsByClassName('p-paginator-next p-paginator-element p-link p-ripple')[0].click()")
             except:
                 break
 

@@ -79,12 +79,11 @@ class ScraperManager:
             "nazwa_org_repr", "sposob_repr", "adr_www", "email"])
         representants_df = pd.DataFrame()
 
-        scraper = KrsScrapper()
-
         for count, row in enumerate(self.data):
             counter = str(count + 1) + '/' + str(len(self.data))
             try:
-                gen_info_dict, repr_df = scraper.scrap(row[0], row[1])
+                scraper = KrsScrapper(id = row[0], id_type = row[1])
+                gen_info_dict, repr_df = scraper.scrap()
 
                 representants_df = pd.concat([representants_df, repr_df], axis=0).reset_index(drop=True)
                 general_info_df.loc[len(general_info_df)] = gen_info_dict.values()
@@ -142,4 +141,4 @@ class ScraperManager:
 if __name__ == '__main__':
     manager = ScraperManager('input.txt', log_scrap_info=True)
     manager.scrap()
-    manager.save_to_csv(path='output/')
+    # manager.save_to_csv(path='output/')
