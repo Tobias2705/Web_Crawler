@@ -1,8 +1,8 @@
-from src.input_validator.input_validator import InputValidator
-from src.aleo_scraper.AleoScrapper import get_href_links
-from src.infostrefa_scrapper.infostrefa_scrapper import InfoStrefaScrapper
-from src.krs_scraper.krs_scrapper import KrsScrapper
-from src.regon_scraper.regon_scraper import RegonScraper
+from src.components.input_validator.input_validator import InputValidator
+from src.components.aleo_scraper.AleoScrapper import get_href_links
+from src.components.infostrefa_scrapper.infostrefa_scrapper import InfoStrefaScrapper
+from src.components.krs_scraper.krs_scrapper import KrsScrapper
+from src.components.regon_scraper.regon_scraper import RegonScraper
 
 from threading import Thread
 import pandas as pd
