@@ -149,9 +149,9 @@ class DataBaseManager:
                 else:
                     entities_ids.append(None)
 
-            local_regon_entities = local_regon_entities_df.drop(columns=['regon j.nadrzędnej', 'nip j.nadrzędnej'])
+            local_regon_entities_df.drop(columns=['regon j.nadrzędnej', 'nip j.nadrzędnej'], inplace=True)
 
-            regon_entities = local_regon_entities.assign(id_jed_nadrzednej=entities_ids)
+            regon_entities = local_regon_entities_df.assign(id_jed_nadrzednej=entities_ids)
             regon_entities.to_sql('jednostka_lokalna', conn, if_exists='append', index=False)
 
             conn.commit()
@@ -198,9 +198,9 @@ class DataBaseManager:
                 else:
                     entities_ids.append(None)
 
-            representatives = representatives_df.drop(columns=['nip'])
+            representatives_df.drop(columns=['nip'], inplace=True)
 
-            representatives = representatives.assign(id_podmiotu=entities_ids)
+            representatives = representatives_df.assign(id_podmiotu=entities_ids)
             representatives.to_sql('reprezentant', conn, if_exists='append', index=False)
 
             conn.commit()
@@ -223,15 +223,67 @@ class DataBaseManager:
                 else:
                     entities_ids.append(None)
 
-            info = info_df.drop(columns=['nip'])
+            info_df.drop(columns=['nip'], inplace=True)
 
-            info = info.assign(id_podmiotu=entities_ids)
+            info = info_df.assign(id_podmiotu=entities_ids)
             info.to_sql('infostrefa', conn, if_exists='append', index=False)
 
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
             print(f"Failed to insert posts data into table infostrefa - {error}")
+
+    def insert_shareholders_info(self):
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            shareholders_df = pd.read_csv('output/aleo_shareholders_df', dtype={'nip': str})
+
+            entities_ids = []
+            for index, row in shareholders_df.iterrows():
+                query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip'])
+                result = conn.execute(query).fetchall()
+                if result:
+                    entities_ids.append(result[0][0])
+                else:
+                    entities_ids.append(None)
+
+            shareholders_df.drop(columns=['nip'], inplace=True)
+            shareholders_df.rename(columns={'shareholder': 'nazwa'}, inplace=True)
+
+            shareholders = shareholders_df.assign(id_podmiotu=entities_ids)
+            shareholders.to_sql('akcjonariusz', conn, if_exists='append', index=False)
+
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert shareholders data into table akcjonariusz - {error}")
+
+    def insert_accounts_info(self):
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            accounts_df = pd.read_csv('output/aleo_account_numbers_df', dtype={'nip': str})
+
+            entities_ids = []
+            for index, row in accounts_df.iterrows():
+                query = "SELECT id FROM podmiot WHERE nip='{}'".format(row['nip'])
+                result = conn.execute(query).fetchall()
+                if result:
+                    entities_ids.append(result[0][0])
+                else:
+                    entities_ids.append(None)
+
+            accounts_df.drop(columns=['nip'], inplace=True)
+            accounts_df.rename(columns={'account_number': 'numer'}, inplace=True)
+
+            accounts = accounts_df.assign(id_podmiotu=entities_ids)
+            accounts.to_sql('konto', conn, if_exists='append', index=False)
+
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert bank accounts data into table konto - {error}")
 
     def select_from_db(self, table=''):
         conn = sqlite3.connect(self.db_path)
@@ -259,9 +311,11 @@ if __name__ == '__main__':
 
     # Insert additional entities data (from krs)
     db_manager.insert_general_entities_info()
-
-    # Insert representatives data (from krs)
     db_manager.insert_representatives_data()
+
+    # Insert shareholders and bank accounts (from infostrefa)
+    db_manager.insert_shareholders_info()
+    db_manager.insert_accounts_info()
 
     # Insert posts data (from infostrefa)
     db_manager.insert_infostrefa_posts()
@@ -269,4 +323,6 @@ if __name__ == '__main__':
     db_manager.select_from_db(table='podmiot')
     db_manager.select_from_db(table='jednostka_lokalna')
     db_manager.select_from_db(table='reprezentant')
+    db_manager.select_from_db(table='akcjonariusz')
+    db_manager.select_from_db(table='konto')
     db_manager.select_from_db(table='infostrefa')
