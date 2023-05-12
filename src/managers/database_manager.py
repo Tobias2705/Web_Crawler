@@ -285,6 +285,35 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert bank accounts data into table konto - {error}")
 
+    def insert_pkd_info(self):
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            pkd_df = pd.read_csv('output/regon_pkd_df', dtype={'regon': str})
+
+            entities_ids = []
+            for index, row in pkd_df.iterrows():
+                regon = row['regon']
+                if len(regon) == 14:
+                    query = "SELECT id FROM jednostka_lokalna WHERE regon='{}'".format(row['regon'])
+                else:
+                    query = "SELECT id FROM podmiot WHERE regon='{}'".format(row['regon'])
+                result = conn.execute(query).fetchall()
+                if result:
+                    entities_ids.append(result[0][0])
+                else:
+                    entities_ids.append(None)
+
+            pkd_df.drop(columns=['regon'], inplace=True)
+
+            pkd = pkd_df.assign(id_podmiotu=entities_ids)
+            pkd.to_sql('pkd', conn, if_exists='append', index=False)
+
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert pkd data into table pkd - {error}")
+
     def select_from_db(self, table=''):
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
@@ -308,6 +337,7 @@ if __name__ == '__main__':
     # Insert entities data (from regon)
     db_manager.insert_entity_data()
     db_manager.insert_local_entity_data()
+    db_manager.insert_pkd_info()
 
     # Insert additional entities data (from krs)
     db_manager.insert_general_entities_info()
@@ -320,9 +350,11 @@ if __name__ == '__main__':
     # Insert posts data (from infostrefa)
     db_manager.insert_infostrefa_posts()
 
+    # Test printing
     db_manager.select_from_db(table='podmiot')
-    db_manager.select_from_db(table='jednostka_lokalna')
-    db_manager.select_from_db(table='reprezentant')
-    db_manager.select_from_db(table='akcjonariusz')
-    db_manager.select_from_db(table='konto')
-    db_manager.select_from_db(table='infostrefa')
+    # db_manager.select_from_db(table='jednostka_lokalna')
+    # db_manager.select_from_db(table='pkd')
+    # db_manager.select_from_db(table='reprezentant')
+    # db_manager.select_from_db(table='akcjonariusz')
+    # db_manager.select_from_db(table='konto')
+    # db_manager.select_from_db(table='infostrefa')
