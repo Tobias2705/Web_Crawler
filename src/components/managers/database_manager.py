@@ -1,3 +1,9 @@
+"""
+database_manager.py
+====================================
+This module is used to create database using scraped data.
+"""
+
 import os
 import sqlite3
 import pandas as pd
@@ -5,12 +11,36 @@ from typing import List
 
 
 class DataBaseManager:
+    """
+        This class is used to create a database using scraped data from all scrapers modules.
+        It is initialised with the following parameters.
+
+        Attributes:
+            db_path (str): Contains the path to the database file (.db).
+            clear_database (bool): Optional parameter that specifies whether the database tables are deleted at runtime.
+    """
     def __init__(self, db_path, clear_database=False):
+        """
+            Initializes the RegonScraper class.
+        """
         self.db_path = db_path
         self.clear_database = clear_database
 
     @staticmethod
     def _find_entities(conn: sqlite3.Connection, df: pd.DataFrame, table: str, column: str, compare: str) -> List[int]:
+        """
+            Private static method used to finding entity identifiers to create relationships between tables in
+            the database.
+
+            :param conn: A `sqlite3.Connection` object representing the connection to the database.
+            :param df: A Pandas `DataFrame` object representing the data to be searched for entity identifiers.
+            :param table: A string representing the name of the table to search for entity identifiers.
+            :param column: A string representing the name of the column in the `df` DataFrame to compare with
+                           the values in the database table.
+            :param compare: A string representing the column to compare with the values in the database table.
+            :return: A list of entity identifiers for each row in the `df` DataFrame.
+                     If an entity is not found, the corresponding value in the list will be `None`.
+        """
         entities_ids = []
         for index, row in df.iterrows():
             query = f"SELECT id FROM {table} WHERE {compare}='{row[column]}'"
@@ -22,7 +52,13 @@ class DataBaseManager:
 
         return entities_ids
 
-    def create_db_create_tables(self):
+    def create_db_create_tables(self) -> None:
+        """
+            Public method used to create tables in database.
+
+            :param: None.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
             cur = conn.cursor()
@@ -136,7 +172,13 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to initialize sqlite tables - {error}")
 
-    def insert_entity_data(self):
+    def insert_entity_data(self) -> None:
+        """
+            Public method used to complete the entity table with the data (from regon) of the scraped entities.
+
+            :param: None.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
 
@@ -148,7 +190,14 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert entities into table podmiot - {error}")
 
-    def insert_local_entity_data(self):
+    def insert_local_entity_data(self) -> None:
+        """
+            Public method used to complete the local entity table with the data (from regon)
+            of the scraped local entities.
+
+            :param: None.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
 
@@ -166,7 +215,13 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert local entities into table jednostka_lokalna - {error}")
 
-    def insert_general_entities_info(self):
+    def insert_general_entities_info(self) -> None:
+        """
+            Public method used to update the entity table with the additional data (from krs) of the scraped entities.
+
+            :param: None.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
             cur = conn.cursor()
@@ -190,7 +245,13 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert additional entities data into table podmiot - {error}")
 
-    def insert_representatives_data(self):
+    def insert_representatives_data(self) -> None:
+        """
+            Public method used to complete the representative table with the data (from krs) of the scraped entities.
+
+            :param: None.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
 
@@ -208,7 +269,14 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert representatives data into table reprezentant - {error}")
 
-    def insert_infostrefa_posts(self):
+    def insert_infostrefa_posts(self) -> None:
+        """
+            Public method used to complete the ifnostrefa table with the data of the scraped messages
+            about entities.
+
+            :param: None.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
 
@@ -226,7 +294,13 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert posts data into table infostrefa - {error}")
 
-    def insert_shareholders_info(self):
+    def insert_shareholders_info(self) -> None:
+        """
+            Public method used to complete the shareholder table with the data (from aleo) of the scraped entities.
+
+            :param: None.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
 
@@ -245,7 +319,13 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert shareholders data into table akcjonariusz - {error}")
 
-    def insert_accounts_info(self):
+    def insert_accounts_info(self) -> None:
+        """
+            Public method used to complete the account table with the data (from aleo) of the scraped entities.
+
+            :param: None.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
 
@@ -264,7 +344,13 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert bank accounts data into table konto - {error}")
 
-    def insert_pkd_info(self):
+    def insert_pkd_info(self) -> None:
+        """
+            Public method used to complete the pkd table with the data (from regon) of the scraped entities.
+
+            :param: None.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
 
@@ -293,18 +379,6 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert pkd data into table pkd - {error}")
 
-    def select_from_db(self, table=''):
-        conn = sqlite3.connect(self.db_path)
-        cur = conn.cursor()
-
-        cur.execute(f'SELECT * FROM {table}')
-        results = cur.fetchall()
-
-        for row in results:
-            print(row)
-
-        conn.close()
-
 
 if __name__ == '__main__':
     path = os.path.abspath(os.path.join(os.getcwd(), '..', '..', 'database')) + "\\KNF_sentiment.db"
@@ -328,12 +402,3 @@ if __name__ == '__main__':
 
     # Insert posts data (from infostrefa)
     db_manager.insert_infostrefa_posts()
-
-    # Test printing
-    # db_manager.select_from_db(table='podmiot')
-    # db_manager.select_from_db(table='jednostka_lokalna')
-    # db_manager.select_from_db(table='pkd')
-    # db_manager.select_from_db(table='reprezentant')
-    # db_manager.select_from_db(table='akcjonariusz')
-    # db_manager.select_from_db(table='konto')
-    # db_manager.select_from_db(table='infostrefa')

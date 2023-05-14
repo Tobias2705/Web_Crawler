@@ -16,23 +16,28 @@ from selenium.webdriver.support import expected_conditions as ec
 
 class RegonScraper:
     """
-    This class is used to create a scraper that scrapes information about entities from the REGON database.
-    It is initialised with the following parameters.
+        This class is used to create a scraper that scrapes information about entities from the REGON database.
+        It is initialised with the following parameters.
 
-    Attributes:
-        entity_data (pandas.DataFrame): The DataFrame where the scraped data about entities will be stored.
-        local_entity_data (pandas.DataFrame): The DataFrame where the scraped data about local entities will be stored.
-        key_type (dict): The dictionary containing the keys and their corresponding identifiers used for crawling.
-        entity_type (dict): The dictionary containing the entity types and their corresponding identifiers used
-                            for scarping.
-        local_entity_type (dict): The dictionary containing the local entity types and their corresponding identifiers
-                            used for scarping.
+        Attributes:
+            entity_data (pandas.DataFrame): The DataFrame where the scraped data about entities will be stored.
+            local_entity_data (pandas.DataFrame): The DataFrame where the scraped data about local entities will
+                                                  be stored.
+            pkd (pandas.DataFrame): The DataFrame where the scraped data about pkd will be stored.
+            key_type (dict): The dictionary containing the keys and their corresponding identifiers used for crawling.
+            entity_type (dict): The dictionary containing the entity types and their corresponding identifiers used
+                                for scarping.
+            local_entity_type (dict): The dictionary containing the local entity types and their corresponding
+                                      identifiers used for scarping.
+            local_entity_form (dict): The dictionary containing the local entity forms types and their corresponding
+                                      identifiers used for scraping.
     """
 
     def __init__(self):
         """
-        Initializes the RegonScraper class.
+            Initializes the RegonScraper class.
         """
+        # Technical variables
         self.local_regons = []
         self.rows = 0
         chrome_options = Options()
@@ -40,6 +45,7 @@ class RegonScraper:
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.implicitly_wait(30)
+
         self.entity_data = pd.DataFrame(columns=[
             'regon',
             'nip',
@@ -126,7 +132,7 @@ class RegonScraper:
                               'table' in driver.find_element(By.ID, l_entity_id).get_attribute('style')), None)
         return l_entity_type
 
-    def _get_data(self, key_value: str, idx: int, data_type: str):
+    def _get_data(self, key_value: str, idx: int, data_type: str) -> None:
         """
             Private method used to scrape the data from the database.
 
@@ -134,6 +140,7 @@ class RegonScraper:
             :param idx: Value specifying the number of the line to be analysed.
             :return: None.
         """
+        # Initialize driver
         self.driver.get("https://wyszukiwarkaregon.stat.gov.pl/appBIR/index.aspx")
         self.driver.delete_all_cookies()
         self.driver.execute_script("window.localStorage.clear()")
@@ -234,7 +241,7 @@ class RegonScraper:
         self._get_pkd(self.driver, entity_type, row_data[0])
         self.local_entity_data.loc[len(self.local_entity_data)] = row_data
 
-    def _check_if_local_entities_exist(self, driver: webdriver, entity_type):
+    def _check_if_local_entities_exist(self, driver: webdriver, entity_type) -> None:
         """
             Private method used to check if local entities exist.
 
@@ -278,10 +285,10 @@ class RegonScraper:
 
     def get_entity_info(self, number: str, num_type: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        Public method used to scrape the data from the database and return it as a pandas DataFrame.
+            Public method used to scrape the data from the database and return it as a pandas DataFrame.
 
-        :param: None.
-        :return: The scraped data as a pandas DataFrame.
+            :param: None.
+            :return: The scraped data as a pandas DataFrame.
         """
         self.reset_dataframes()
         self._get_data(number, 0, num_type)
@@ -293,12 +300,12 @@ class RegonScraper:
                 self._get_data(regon.strip(), 0, 'REGON')
         return self.entity_data, self.local_entity_data, self.pkd
 
-    def reset_dataframes(self):
+    def reset_dataframes(self) -> None:
         """
-        Public method used to clear pandas DataFrame during iteration.
+            Public method used to clear pandas DataFrame during iteration.
 
-        :param: None.
-        :return: The scraped data as a pandas DataFrame.
+            :param: None.
+            :return: None.
         """
         self.entity_data.drop(self.entity_data.index, inplace=True)
         self.local_entity_data.drop(self.local_entity_data.index, inplace=True)

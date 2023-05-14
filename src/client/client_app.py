@@ -1,3 +1,9 @@
+"""
+client_app.py
+====================================
+The module contains a window application used to perform operations related to the implemented database.
+"""
+
 import os
 import csv
 import sys
@@ -8,16 +14,30 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHB
 
 
 class MainWindow(QMainWindow):
+    """
+        This class is used to create a window application used to perform operations related to the database.
+        It is initialised with the following parameters.
+
+        Attributes:
+            db_path (str): Contains the path to the database file (.db).
+    """
     def __init__(self):
         super().__init__()
         self.db_path = os.path.abspath(os.path.join(os.getcwd(), '..', 'database')) + "\\KNF_sentiment.db"
 
+        # Technical variables
         self.setWindowTitle('KNF Sentiment Client')
         self.setGeometry(0, 0, 800, 600)
 
-        self.show_main_screen()
+        self._show_main_screen()
 
-    def show_main_screen(self, table=None):
+    def _show_main_screen(self, table=None) -> None:
+        """
+            Private method used to create main application window.
+
+            :param table: Optional parameter, used when the main window is opened when returning from a table window.
+            :return: None.
+        """
         if table:
             table.hide()
 
@@ -41,11 +61,17 @@ class MainWindow(QMainWindow):
         layout.addWidget(nav_bar)
         layout.addWidget(text_edit)
 
-        commands_btn.clicked.connect(self.execute_command_dialog)
-        tables_btn.clicked.connect(self.show_table_dialog)
-        export_btn.clicked.connect(self.export_to_csv_dialog)
+        commands_btn.clicked.connect(self._execute_command_dialog)
+        tables_btn.clicked.connect(self._show_table_dialog)
+        export_btn.clicked.connect(self._export_to_csv_dialog)
 
-    def execute_command_dialog(self):
+    def _execute_command_dialog(self) -> None:
+        """
+            Private method used to create dialog window for the execution of a query.
+
+            :param: None.
+            :return: None.
+        """
         dialog = QDialog(self)
         dialog.setWindowTitle('Wykonaj polecenie SQL')
         dialog.setModal(True)
@@ -63,12 +89,19 @@ class MainWindow(QMainWindow):
         layout.addWidget(ok_button, 1, 0)
         layout.addWidget(cancel_button, 1, 1)
 
-        ok_button.clicked.connect(lambda: self.execute_command(query_text.text(), dialog))
+        ok_button.clicked.connect(lambda: self._execute_command(query_text.text(), dialog))
         cancel_button.clicked.connect(dialog.reject)
 
         dialog.exec_()
 
-    def execute_command(self, query, dialog):
+    def _execute_command(self, query: str, dialog: QDialog) -> None:
+        """
+            Private method used to create window for executed query.
+
+            :param query: String containing a query entered by the user.
+            :param dialog: Dialogue object of the executed query.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()
@@ -91,7 +124,7 @@ class MainWindow(QMainWindow):
                 table.setHorizontalHeaderLabels(headers)
 
                 back_btn = QPushButton('Powrót', self)
-                back_btn.clicked.connect(lambda: self.show_main_screen(table=table))
+                back_btn.clicked.connect(lambda: self._show_main_screen(table=table))
 
                 layout = QVBoxLayout()
                 layout.addWidget(table)
@@ -108,7 +141,13 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, 'Błąd', 'Wystąpił błąd podczas wykonywania polecenia SQL: {}'.format(str(e)))
             dialog.reject()
 
-    def show_table_dialog(self):
+    def _show_table_dialog(self) -> None:
+        """
+            Private method used to create dialog window for the display of tables.
+
+            :param: None.
+            :return: None.
+        """
         dialog = QDialog(self)
         dialog.setWindowTitle('Pokaż tabelę')
         dialog.setModal(True)
@@ -136,12 +175,19 @@ class MainWindow(QMainWindow):
         layout.addWidget(ok_button, 1, 0)
         layout.addWidget(cancel_button, 1, 1)
 
-        ok_button.clicked.connect(lambda: self.show_table(table_combo.currentText(), dialog))
+        ok_button.clicked.connect(lambda: self._show_table(table_combo.currentText(), dialog))
         cancel_button.clicked.connect(dialog.reject)
 
         dialog.exec_()
 
-    def show_table(self, table_name, dialog):
+    def _show_table(self, table_name: str, dialog: QDialog) -> None:
+        """
+            Private method used to create window with table for executed query.
+
+            :param table_name: String containing a table name from which data will be shown.
+            :param dialog: Dialogue object of the executed query.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()
@@ -163,7 +209,7 @@ class MainWindow(QMainWindow):
                 table.setHorizontalHeaderLabels(headers)
 
                 back_btn = QPushButton('Powrót', self)
-                back_btn.clicked.connect(self.show_main_screen)
+                back_btn.clicked.connect(self._show_main_screen)
 
                 layout = QVBoxLayout()
                 layout.addWidget(table)
@@ -180,7 +226,13 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, 'Błąd', 'Wystąpił błąd podczas wyświetlania tabeli: {}'.format(str(e)))
             dialog.reject()
 
-    def export_to_csv_dialog(self):
+    def _export_to_csv_dialog(self) -> None:
+        """
+            Private method used to create dialog window for exporting data.
+
+            :param: None.
+            :return: None.
+        """
         dialog = QDialog(self)
         dialog.setWindowTitle('Eksportuj do CSV')
         dialog.setModal(True)
@@ -215,14 +267,20 @@ class MainWindow(QMainWindow):
         layout.addWidget(ok_button, 2, 0)
         layout.addWidget(cancel_button, 2, 1)
 
-        location_button.clicked.connect(lambda: self.select_location(location_lineedit))
+        location_button.clicked.connect(lambda: self._select_location(location_lineedit))
         ok_button.clicked.connect(
-            lambda: self.export_to_csv(table_combo.currentText(), location_lineedit.text(), dialog))
+            lambda: self._export_to_csv(table_combo.currentText(), location_lineedit.text(), dialog))
         cancel_button.clicked.connect(dialog.reject)
 
         dialog.exec_()
 
-    def select_location(self, location_lineedit):
+    def _select_location(self, location_lineedit: QLineEdit) -> None:
+        """
+            Private method used to create dialog window for choosing the path where the csv file will be saved.
+
+            :param location_lineedit: LineEdit object which will store the indicated path.
+            :return: None.
+        """
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         filename, _ = QFileDialog.getSaveFileName(self, "Wybierz lokalizację", "", "CSV Files (*.csv)", options=options)
@@ -231,7 +289,15 @@ class MainWindow(QMainWindow):
                 filename += '.csv'
             location_lineedit.setText(filename)
 
-    def export_to_csv(self, table_name, location, dialog):
+    def _export_to_csv(self, table_name: str, location: str, dialog: QDialog) -> None:
+        """
+            Private method used to save the data from the selected table in the indicated location.
+
+            :param table_name: String containing a table name from which data will be shown.
+            :param location: String containing the path where the csv file to be created will be saved.
+            :param dialog: Dialogue object of the executed query.
+            :return: None.
+        """
         try:
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()

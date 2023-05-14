@@ -1,13 +1,19 @@
+"""
+input_validator.py
+====================================
+This module is used to validate identifiers from input file.
+"""
+
 from typing import List, Tuple
 
 
 def validate_checksum(value: str, num_type: str) -> bool:
     """
-    Check whether a given string is a valid NIP, or REGON number.
+        Check whether a given string is a valid NIP, or REGON number.
 
-    :param value: The string to be checked.
-    :param num_type: Declared identifier type.
-    :return: True if checksum correct for indicated type, False otherwise.
+        :param value: The string to be checked.
+        :param num_type: Declared identifier type.
+        :return: True if checksum correct for indicated type, False otherwise.
     """
     if num_type == 'NIP':
         if len(value) != 10 or not value.isdigit():
@@ -61,9 +67,9 @@ def validate_checksum(value: str, num_type: str) -> bool:
 class InputValidator:
     def __init__(self, filepath: str):
         """
-        Initializes the InputValidator class.
+            Initializes the InputValidator class.
 
-        :param filepath: The path to the file from which the data will be loaded.
+            :param filepath: The path to the file from which the data will be loaded.
         """
         self.filepath = filepath
         self.data = []
@@ -71,12 +77,12 @@ class InputValidator:
 
     def validate_input(self) -> Tuple[List, List]:
         """
-        Public method used to validate the data from the input file and return it as a list of tuples containing
-        valid NIP or REGON numbers.
+            Public method used to validate the data from the input file and return it as a list of tuples containing
+            valid NIP or REGON numbers.
 
-        :param: None.
-        :return: List of tuples with valid NIP or REGON number and type, and list of tuples with rows
-        containing incorrect data.
+            :param: None.
+            :return: List of tuples with valid NIP or REGON number and type, and list of tuples with rows
+                     containing incorrect data.
         """
         with open(self.filepath, 'r') as f:
             lines = f.readlines()
