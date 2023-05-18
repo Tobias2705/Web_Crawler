@@ -68,6 +68,7 @@ class DataBaseManager:
                 cur.execute("DROP TABLE IF EXISTS jednostka_lokalna")
                 cur.execute("DROP TABLE IF EXISTS reprezentant")
                 cur.execute("DROP TABLE IF EXISTS infostrefa")
+                cur.execute("DROP TABLE IF EXISTS bankier")
                 cur.execute("DROP TABLE IF EXISTS konto")
                 cur.execute("DROP TABLE IF EXISTS akcjonariusz")
                 cur.execute("DROP TABLE IF EXISTS pkd")
@@ -140,6 +141,16 @@ class DataBaseManager:
             """)
 
             cur.execute(""" 
+                CREATE TABLE IF NOT EXISTS bankier(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_podmiotu INTEGER,
+                    data TEXT,
+                    wiadomosc TEXT,
+                    FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
+                )
+            """)
+
+            cur.execute(""" 
                 CREATE TABLE IF NOT EXISTS konto(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     id_podmiotu INTEGER,
@@ -183,6 +194,7 @@ class DataBaseManager:
             conn = sqlite3.connect(self.db_path)
 
             regon_entities_df = pd.read_csv('output/regon_entity_df', dtype={'regon': str, 'nip': str})
+            regon_entities_df.drop(columns=['nazwa_gieldowa'], inplace=True)
             regon_entities_df.to_sql('podmiot', conn, if_exists='append', index=False)
 
             conn.commit()
@@ -292,7 +304,32 @@ class DataBaseManager:
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert posts data into table infostrefa - {error}")
+            print(f"Failed to insert posts data into tables infostrefa & bankier - {error}")
+
+    def insert_bankier_posts(self) -> None:
+        """
+            Public method used to complete the bankier table with the data of the scraped messages
+            about entities.
+
+            :param: None.
+            :return: None.
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            bank_df = pd.read_csv('output/bankier_news_df', dtype={'nip': str})
+
+            entities_ids = self._find_entities(conn, bank_df, 'podmiot', 'nip', 'nip')
+
+            bank_df.drop(columns=['nip'], inplace=True)
+
+            bank = bank_df.assign(id_podmiotu=entities_ids)
+            bank.to_sql('bankier', conn, if_exists='append', index=False)
+
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert posts data into table bankier - {error}")
 
     def insert_shareholders_info(self) -> None:
         """
@@ -400,5 +437,6 @@ if __name__ == '__main__':
     db_manager.insert_shareholders_info()
     db_manager.insert_accounts_info()
 
-    # Insert posts data (from infostrefa)
+    # Insert posts data (from infostrefa and bankier)
     db_manager.insert_infostrefa_posts()
+    db_manager.insert_bankier_posts()

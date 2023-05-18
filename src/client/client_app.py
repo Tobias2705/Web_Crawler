@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
         nav_bar.setFixedWidth(150)
         nav_layout = QVBoxLayout(nav_bar)
 
-        commands_btn = QPushButton('Wykonaj polecenie')
+        commands_btn = QPushButton('Wykonaj zapytanie')
         tables_btn = QPushButton('Pokaż tabele')
         export_btn = QPushButton('Eksport do CSV')
 
@@ -73,12 +73,12 @@ class MainWindow(QMainWindow):
             :return: None.
         """
         dialog = QDialog(self)
-        dialog.setWindowTitle('Wykonaj polecenie SQL')
+        dialog.setWindowTitle('Wykonaj zapytanie SELECT')
         dialog.setModal(True)
 
         layout = QGridLayout(dialog)
 
-        query_label = QLabel('Wprowadź polecenie SQL:')
+        query_label = QLabel('Wprowadź zapytanie:')
         query_text = QLineEdit()
 
         ok_button = QPushButton('Wykonaj')
@@ -105,6 +105,10 @@ class MainWindow(QMainWindow):
         try:
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()
+
+            if not query.strip().lower().startswith('select'):
+                raise ValueError("Tylko polecenia SELECT są dozwolone.")
+
             c.execute(query)
             conn.commit()
             result = c.fetchall()

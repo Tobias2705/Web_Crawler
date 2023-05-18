@@ -3,6 +3,8 @@ from src.components.aleo_scraper.AleoScrapper import get_href_links
 from src.components.infostrefa_scrapper.infostrefa_scrapper import InfoStrefaScrapper
 from src.components.krs_scraper.krs_scrapper import KrsScrapper
 from src.components.regon_scraper.regon_scraper import RegonScraper
+from src.components.stock_name_scraper.stock_name_scraper import StockNameScraper
+from src.components.bankier_scrapper.bankier_scrapper import BankierScraper
 
 from threading import Thread
 import pandas as pd
@@ -24,21 +26,28 @@ class ScraperManager:
         print('Starting scraping regon and krs...')
         regon_thread.start()
         krs_thread.start()
-
+        # TODO Run aleo with regon and krs in parallel (because it works on nip)
         regon_thread.join()
         krs_thread.join()
         print('Stopped scraping regon and krs...')
 
-        # run aleo and infostrefa parallelly
+        print('Starting scraping stock names')
+        self._run_stock_name_scraper()
+        print('Stopped scraping stock names')
+
+        # run aleo, infostrefa and bankier parallelly
         aleo_thread = Thread(target=self._run_aleo_scraper)
         infostrefa_thread = Thread(target=self._run_infostrefa_scraper)
+        bankier_thread = Thread(target=self._run_bankier_scraper)
 
         print('Starting scraping infostrefa and aleo...')
         aleo_thread.start()
         infostrefa_thread.start()
+        bankier_thread.start()
 
         aleo_thread.join()
         infostrefa_thread.join()
+        bankier_thread.join()
         print('Stopped scraping infostrefa and aleo...')
 
     def _run_aleo_scraper(self):
@@ -46,6 +55,7 @@ class ScraperManager:
         account_numbers_df = pd.DataFrame(columns=['nip', 'account_number'])
         shareholders_df = pd.DataFrame(columns=['nip', 'shareholder'])
 
+        # TODO Modify to get nips from self.data (without duplicates)
         nips = self.regon_entity_df.nip.copy().drop_duplicates()
 
         for count, nip in enumerate(nips):
@@ -67,11 +77,23 @@ class ScraperManager:
         self.aleo_account_numbers_df = account_numbers_df
         self.aleo_shareholders_df = shareholders_df
 
+    def _run_stock_name_scraper(self):
+        entities_df = self.regon_entity_df[["nazwa", "nip"]].copy().drop_duplicates()
+        scraper = StockNameScraper(entities_df, print_info=self.log_scrap_info)
+        stock_names = scraper.get_data()
+        self.regon_entity_df['nazwa_gieldowa'] = stock_names
+
     def _run_infostrefa_scraper(self):
         # scraping from regon NIPs and names
-        entities_df = self.regon_entity_df[["nazwa", "nip"]].copy().drop_duplicates()
+        entities_df = self.regon_entity_df[["nip", "nazwa_gieldowa"]].copy().drop_duplicates()
         scraper = InfoStrefaScrapper(entities_df, print_info=self.log_scrap_info)
         self.infostrefa_news_df = scraper.get_data()
+
+    def _run_bankier_scraper(self):
+        # scraping from regon NIPs and names
+        entities_df = self.regon_entity_df[["nip", "nazwa_gieldowa"]].copy().drop_duplicates()
+        scraper = BankierScraper(entities_df, print_info=self.log_scrap_info)
+        self.bankier_news_df = scraper.get_data()
 
     def _run_krs_scraper(self):
         general_info_df = pd.DataFrame(columns=[
@@ -129,7 +151,8 @@ class ScraperManager:
             'krs_general_info_df': self.krs_general_info_df.copy(),
             'aleo_account_numbers_df': self.aleo_account_numbers_df.copy(),
             'aleo_shareholders_df': self.aleo_shareholders_df.copy(),
-            'infostrefa_news_df': self.infostrefa_news_df.copy()
+            'infostrefa_news_df': self.infostrefa_news_df.copy(),
+            'bankier_news_df': self.bankier_news_df.copy()
         }
         return results
 
