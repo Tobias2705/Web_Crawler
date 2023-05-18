@@ -26,7 +26,7 @@ class ScraperManager:
         print('Starting scraping regon and krs...')
         regon_thread.start()
         krs_thread.start()
-
+        # TODO Run aleo with regon and krs in parallel (because it works on nip)
         regon_thread.join()
         krs_thread.join()
         print('Stopped scraping regon and krs...')
@@ -55,6 +55,7 @@ class ScraperManager:
         account_numbers_df = pd.DataFrame(columns=['nip', 'account_number'])
         shareholders_df = pd.DataFrame(columns=['nip', 'shareholder'])
 
+        # TODO Modify to get nips from self.data (without duplicates)
         nips = self.regon_entity_df.nip.copy().drop_duplicates()
 
         for count, nip in enumerate(nips):

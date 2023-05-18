@@ -2,4 +2,3 @@
 **/.idea/
 **geckodriver.log
 src/components/managers/output/
-src/components/managers/KNF_sentiment.db

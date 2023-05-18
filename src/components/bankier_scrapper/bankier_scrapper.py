@@ -36,9 +36,9 @@ class BankierScraper:
                 self.forum_link = self.driver.find_element(By.XPATH, "//div[contains(@id, 'boxForum')]/div[contains(@class, 'boxFooter')]/a").get_attribute('href')
                 self.messages_link = self.driver.find_element(By.XPATH, "//a[contains(text(), 'Więcej komunikatów')]").get_attribute('href')
                 self.news_link = self.driver.find_element(By.XPATH, "//a[contains(text(), 'Więcej wiadomości')]").get_attribute('href')
-                self._get_forum(entity.nazwa_gieldowa)
-                self._get_messages(entity.nazwa_gieldowa)
-                self._get_news(entity.nazwa_gieldowa)
+                self._get_forum(entity.nip)
+                self._get_messages(entity.nip)
+                self._get_news(entity.nip)
                 if self.print_info:
                     print(f"{counter} BankierScraper scraped: {entity.nip}")
             except:
