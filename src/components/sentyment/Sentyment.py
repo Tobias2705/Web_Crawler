@@ -19,9 +19,7 @@ def analyze_text(text):
         "rynek": ["konkurencja", "nowi", "konkurenci", "nowi", "gracze", "rynku", "wzrost", "rywalizacji", "nowe", "produkty", "konkurentów", "nowe", "usługi", "rynku"],
     }
 
-    analyzer = SentimentIntensityAnalyzer()
     lemmatizer = WordNetLemmatizer()
-    text_lemmatized = ' '.join([lemmatizer.lemmatize(word) for word in text.split()])
     wynik = {'neg': 0.0, 'neu': 0.0, 'pos': 0.1, 'compound': 0.0}
     for word in text.split():
         for kategoria, keyword_list in sentiment_dict.items():
@@ -59,21 +57,35 @@ def analyze_text(text):
     else:
         return 'neutral'
 
-def generate_time_table(infostrefa_news_df):
+def generate_time_table(infostrefa_news_df,bankier):
     time_df = infostrefa_news_df.copy()
     time_df['Timestamp'] = pd.to_datetime(time_df['data'], format='%H:%M %d/%m/%Y')
-    time_df['time_id'] = time_df['Timestamp'].dt.astype(str)
+    time_df['time_id'] = time_df['Timestamp'].astype(str)
     time_df['godzina'] = time_df['Timestamp'].dt.hour
     time_df['dzien'] = time_df['Timestamp'].dt.day
     time_df['mesiac'] = time_df['Timestamp'].dt.month
     time_df['rok'] = time_df['Timestamp'].dt.year
     time_df=time_df[['time_id','dzien','mesiac','rok','godzina']]
-    return time_df
-def get_sentyment_analysis(infostrefa_news_df):
-    sentyment_df=infostrefa_news_df.copy()
-    sentyment_df['Timestamp'] = pd.to_datetime(sentyment_df['data'], format='%H:%M %d/%m/%Y')
-    sentyment_df['Time_id'] = sentyment_df['Timestamp'].dt.astype(str)
-    sentyment_df['typ_oceny']=sentyment_df['wiadomosc'].apply(lambda x:analyze_text(x))
-    sentyment_df=sentyment_df.rename(columns={'spolka':'nip'})
-    sentyment_df=sentyment_df[['nip','typ_oceny']]
-    return sentyment_df
+    time_bank = bankier.copy()
+    time_bank['Timestamp'] = pd.to_datetime(time_bank['data'], format='%Y-%m-%d %H:%M')
+    time_bank['time_id'] = time_bank['Timestamp'].astype(str)
+    time_bank['godzina'] = time_bank['Timestamp'].dt.hour
+    time_bank['dzien'] = time_bank['Timestamp'].dt.day
+    time_bank['mesiac'] = time_bank['Timestamp'].dt.month
+    time_bank['rok'] = time_bank['Timestamp'].dt.year
+    time_bank = time_bank[['time_id', 'dzien', 'mesiac', 'rok', 'godzina']]
+    return pd.concat(time_df,time_bank)
+def get_sentyment_analysis_info(infostrefa_news_df, bankier):
+    sentyment_info_df=infostrefa_news_df.copy()
+    sentyment_info_df['Timestamp'] = pd.to_datetime(sentyment_info_df['data'], format='%H:%M %d/%m/%Y')
+    sentyment_info_df['Time_id'] = sentyment_info_df['Timestamp'].astype(str)
+    sentyment_info_df['typ_oceny']=sentyment_info_df['wiadomosc'].apply(lambda x:analyze_text(x))
+    sentyment_info_df=sentyment_info_df.rename(columns={'spolka':'nip'})
+    sentyment_info_df=sentyment_info_df[['nip','typ_oceny']]
+    sentyment_bank_df = bankier.copy()
+    sentyment_bank_df['Timestamp'] = pd.to_datetime(sentyment_bank_df['data'], format='%Y-%m-%d %H:%M')
+    sentyment_bank_df['Time_id'] = sentyment_bank_df['Timestamp'].astype(str)
+    sentyment_bank_df['typ_oceny'] = sentyment_bank_df['wiadomosc'].apply(lambda x: analyze_text(x))
+    sentyment_bank_df = sentyment_bank_df.rename(columns={'spolka': 'nip'})
+    sentyment_bank_df = sentyment_bank_df[['nip', 'typ_oceny']]
+    return sentyment_info_df, sentyment_bank_df
