@@ -8,6 +8,7 @@ import os
 import csv
 import sys
 import sqlite3
+import pathlib
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, \
     QTextEdit, QMessageBox, QDialog, QGridLayout, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, QFileDialog
@@ -23,7 +24,7 @@ class MainWindow(QMainWindow):
     """
     def __init__(self):
         super().__init__()
-        self.db_path = os.path.abspath(os.path.join(os.getcwd(), '..', 'database')) + "\\KNF_sentiment.db"
+        self.db_path = os.path.abspath(os.path.join(pathlib.Path(__file__).parent.resolve(), '..', 'database')) + "\\KNF_sentiment.db"
 
         # Technical variables
         self.setWindowTitle('KNF Sentiment Client')

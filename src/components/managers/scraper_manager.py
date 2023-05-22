@@ -75,7 +75,7 @@ class ScraperManager:
         nips = self.regon_entity_df.nip.copy().drop_duplicates()
 
         for count, nip in enumerate(nips):
-            counter = f'{str(count + 1)}/{len(nips)}'
+            counter = str(count + 1) + '/' + str(len(nips))
             try:
                 account_numbers, shareholders = get_href_links(nip)
                 for account_number in account_numbers:
