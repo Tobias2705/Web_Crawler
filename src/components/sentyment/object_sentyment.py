@@ -71,7 +71,7 @@ class SentimentAnalyzer:
 
 
 class DataProcessor:
-    def generate_time_table(self, infostrefa_news_df, bankier):
+    def generate_time_table(self, infostrefa_news_df):
         time_df = infostrefa_news_df.copy()
         time_df['Timestamp'] = pd.to_datetime(time_df['data'], format='%H:%M %d/%m/%Y')
         time_df['time_id'] = time_df['Timestamp'].astype(str)
@@ -81,15 +81,16 @@ class DataProcessor:
         time_df['rok'] = time_df['Timestamp'].dt.year
         time_df = time_df[['time_id', 'dzien', 'mesiac', 'rok', 'godzina']]
 
-        time_bank = bankier.copy()
-        time_bank['Timestamp'] = pd.to_datetime(time_bank['data'], format='%Y-%m-%d %H:%M')
-        time_bank['time_id'] = time_bank['Timestamp'].astype(str)
-        time_bank['godzina'] = time_bank['Timestamp'].dt.hour
-        time_bank['dzien'] = time_bank['Timestamp'].dt.day
-        time_bank['mesiac'] = time_bank['Timestamp'].dt.month
-        time_bank['rok'] = time_bank['Timestamp'].dt.year
-        time_bank = time_bank[['time_id', 'dzien', 'mesiac', 'rok', 'godzina']]
-        return pd.concat(time_df, time_bank)
+        # time_bank = bankier.copy()
+        # time_bank['Timestamp'] = pd.to_datetime(time_bank['data'], format='%Y-%m-%d %H:%M')
+        # time_bank['time_id'] = time_bank['Timestamp'].astype(str)
+        # time_bank['godzina'] = time_bank['Timestamp'].dt.hour
+        # time_bank['dzien'] = time_bank['Timestamp'].dt.day
+        # time_bank['mesiac'] = time_bank['Timestamp'].dt.month
+        # time_bank['rok'] = time_bank['Timestamp'].dt.year
+        # time_bank = time_bank[['time_id', 'dzien', 'mesiac', 'rok', 'godzina']]
+        # return pd.concat(time_df, time_bank)
+        return time_df
 
     def get_sentyment_analysis_info(self, infostrefa_news_df):
         sentiment_info_df = infostrefa_news_df.copy()

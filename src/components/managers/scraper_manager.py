@@ -52,18 +52,18 @@ class ScraperManager:
         print('Stopped scraping infostrefa and aleo...')
 
         sentyment_info_thread = Thread(target=self._run_info_sentyment)
-        sentyment_bankier_thread = Thread(target=self._run_bankier_sentyment())
+        # sentyment_bankier_thread = Thread(target=self._run_bankier_sentyment())
         time_csv_thread = Thread(target=self._run_time_scv())
         print('Sentiment analysis started of infostrefa and bankier')
 
-        sentyment_bankier_thread.join()
+        # sentyment_bankier_thread.join()
+        sentyment_info_thread.start()
         sentyment_info_thread.join()
 
         print('Analysis finished')
         print('Time csv generation')
-
+        time_csv_thread.start()
         time_csv_thread.join()
-
         print('The End')
 
     def _run_aleo_scraper(self):
@@ -101,7 +101,7 @@ class ScraperManager:
         self.bankier_sentyment = DataProcess.get_sentyment_analysis_bankier(self.bankier_news_df)
     def _run_time_scv(self):
         DataProcess = DataProcessor()
-        self.time_df=DataProcess.generate_time_table(self.infostrefa_news_df,self.bankier_news_df)
+        self.time_df=DataProcess.generate_time_table(self.infostrefa_news_df)
 
     def _run_stock_name_scraper(self):
         entities_df = self.regon_entity_df[["nazwa", "nip"]].copy().drop_duplicates()
@@ -181,7 +181,7 @@ class ScraperManager:
             'infostrefa_news_df': self.infostrefa_news_df.copy(),
             'bankier_news_df': self.bankier_news_df.copy(),
             'sentyment_info_df':self.info_sentyment.copy(),
-            'sentyment_bankier_df': self.bankier_sentyment.copy(),
+            # 'sentyment_bankier_df': self.bankier_sentyment.copy(),
             'time_df':self.time_df.copy()
         }
         return results
