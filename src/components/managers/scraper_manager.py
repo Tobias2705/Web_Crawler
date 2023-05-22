@@ -5,7 +5,7 @@ from src.components.krs_scraper.krs_scrapper import KrsScrapper
 from src.components.regon_scraper.regon_scraper import RegonScraper
 from src.components.stock_name_scraper.stock_name_scraper import StockNameScraper
 from src.components.bankier_scrapper.bankier_scrapper import BankierScraper
-from src.components.sentyment.Sentyment import analyze_text, get_sentyment_analysis,generate_time_table
+from src.components.sentyment.object_sentyment import DataProcessor
 
 from threading import Thread
 import pandas as pd
@@ -51,12 +51,20 @@ class ScraperManager:
         bankier_thread.join()
         print('Stopped scraping infostrefa and aleo...')
 
-        # print('Sentiment analysis started ')
-        #
-        # self.sentyment_df=get_sentyment_analysis(self.infostrefa_news_df)
-        # self.time_df=generate_time_table(self.infostrefa_news_df)
-        #
-        # print('Analysis finished')
+        sentyment_info_thread = Thread(target=self._run_info_sentyment)
+        sentyment_bankier_thread = Thread(target=self._run_bankier_sentyment())
+        time_csv_thread = Thread(target=self._run_time_scv())
+        print('Sentiment analysis started of infostrefa and bankier')
+
+        sentyment_bankier_thread.join()
+        sentyment_info_thread.join()
+
+        print('Analysis finished')
+        print('Time csv generation')
+
+        time_csv_thread.join()
+
+        print('The End')
 
     def _run_aleo_scraper(self):
         # scraping from regon NIPs
@@ -84,6 +92,16 @@ class ScraperManager:
 
         self.aleo_account_numbers_df = account_numbers_df
         self.aleo_shareholders_df = shareholders_df
+
+    def _run_info_sentyment(self):
+        DataProcess=DataProcessor()
+        self.info_sentyment=DataProcess.get_sentyment_analysis_info(self.infostrefa_news_df)
+    def _run_bankier_sentyment(self):
+        DataProcess=DataProcessor()
+        self.bankier_sentyment = DataProcess.get_sentyment_analysis_bankier(self.bankier_news_df)
+    def _run_time_scv(self):
+        DataProcess = DataProcessor()
+        self.time_df=DataProcess.generate_time_table(self.infostrefa_news_df,self.bankier_news_df)
 
     def _run_stock_name_scraper(self):
         entities_df = self.regon_entity_df[["nazwa", "nip"]].copy().drop_duplicates()
@@ -161,9 +179,10 @@ class ScraperManager:
             'aleo_account_numbers_df': self.aleo_account_numbers_df.copy(),
             'aleo_shareholders_df': self.aleo_shareholders_df.copy(),
             'infostrefa_news_df': self.infostrefa_news_df.copy(),
-            'bankier_news_df': self.bankier_news_df.copy()
-            # 'sentyment_df':self.sentyment_df.copy(),
-            # 'time_df':self.time_df
+            'bankier_news_df': self.bankier_news_df.copy(),
+            'sentyment_info_df':self.info_sentyment.copy(),
+            'sentyment_bankier_df': self.bankier_sentyment.copy(),
+            'time_df':self.time_df.copy()
         }
         return results
 
