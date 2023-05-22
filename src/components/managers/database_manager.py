@@ -7,6 +7,7 @@ This module is used to create database using scraped data.
 import os
 import sqlite3
 import pandas as pd
+import pathlib
 from typing import List
 
 
@@ -25,6 +26,7 @@ class DataBaseManager:
         """
         self.db_path = db_path
         self.clear_database = clear_database
+        self.output_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), 'output')
 
     @staticmethod
     def _find_entities(conn: sqlite3.Connection, df: pd.DataFrame, table: str, column: str, compare: str) -> List[int]:
@@ -193,7 +195,7 @@ class DataBaseManager:
         try:
             conn = sqlite3.connect(self.db_path)
 
-            regon_entities_df = pd.read_csv('output/regon_entity_df', dtype={'regon': str, 'nip': str})
+            regon_entities_df = pd.read_csv(f'{self.output_dir}/regon_entity_df', dtype={'regon': str, 'nip': str})
             regon_entities_df.drop(columns=['nazwa_gieldowa'], inplace=True)
             regon_entities_df.to_sql('podmiot', conn, if_exists='append', index=False)
 
@@ -213,7 +215,7 @@ class DataBaseManager:
         try:
             conn = sqlite3.connect(self.db_path)
 
-            local_regon_entities_df = pd.read_csv('output/regon_local_entity_df', dtype={'regon': str, 'nip': str})
+            local_regon_entities_df = pd.read_csv(f'{self.output_dir}/regon_local_entity_df', dtype={'regon': str, 'nip': str})
 
             entities_ids = self._find_entities(conn, local_regon_entities_df, 'podmiot', 'nip j.nadrzędnej', 'nip')
 
@@ -238,7 +240,7 @@ class DataBaseManager:
             conn = sqlite3.connect(self.db_path)
             cur = conn.cursor()
 
-            krs_general_df = pd.read_csv('output/krs_general_info_df', dtype={'regon': str, 'nip': str, 'krs': str})
+            krs_general_df = pd.read_csv(f'{self.output_dir}/krs_general_info_df', dtype={'regon': str, 'nip': str, 'krs': str})
             for index, row in krs_general_df.iterrows():
                 nip = row['nip']
                 query = "SELECT id FROM podmiot WHERE nip='{}'".format(nip)
@@ -267,7 +269,7 @@ class DataBaseManager:
         try:
             conn = sqlite3.connect(self.db_path)
 
-            representatives_df = pd.read_csv('output/krs_representatives_df', dtype={'nip': str})
+            representatives_df = pd.read_csv(f'{self.output_dir}/krs_representatives_df', dtype={'nip': str})
 
             entities_ids = self._find_entities(conn, representatives_df, 'podmiot', 'nip', 'nip')
 
@@ -292,7 +294,7 @@ class DataBaseManager:
         try:
             conn = sqlite3.connect(self.db_path)
 
-            info_df = pd.read_csv('output/infostrefa_news_df', dtype={'nip': str})
+            info_df = pd.read_csv(f'{self.output_dir}/infostrefa_news_df', dtype={'nip': str})
 
             entities_ids = self._find_entities(conn, info_df, 'podmiot', 'nip', 'nip')
 
@@ -317,7 +319,7 @@ class DataBaseManager:
         try:
             conn = sqlite3.connect(self.db_path)
 
-            bank_df = pd.read_csv('output/bankier_news_df', dtype={'nip': str})
+            bank_df = pd.read_csv(f'{self.output_dir}/bankier_news_df', dtype={'nip': str})
 
             entities_ids = self._find_entities(conn, bank_df, 'podmiot', 'nip', 'nip')
 
@@ -341,7 +343,7 @@ class DataBaseManager:
         try:
             conn = sqlite3.connect(self.db_path)
 
-            shareholders_df = pd.read_csv('output/aleo_shareholders_df', dtype={'nip': str})
+            shareholders_df = pd.read_csv(f'{self.output_dir}/aleo_shareholders_df', dtype={'nip': str})
 
             entities_ids = self._find_entities(conn, shareholders_df, 'podmiot', 'nip', 'nip')
 
@@ -366,7 +368,7 @@ class DataBaseManager:
         try:
             conn = sqlite3.connect(self.db_path)
 
-            accounts_df = pd.read_csv('output/aleo_account_numbers_df', dtype={'nip': str})
+            accounts_df = pd.read_csv(f'{self.output_dir}/aleo_account_numbers_df', dtype={'nip': str})
 
             entities_ids = self._find_entities(conn, accounts_df, 'podmiot', 'nip', 'nip')
 
@@ -391,7 +393,7 @@ class DataBaseManager:
         try:
             conn = sqlite3.connect(self.db_path)
 
-            pkd_df = pd.read_csv('output/regon_pkd_df', dtype={'regon': str})
+            pkd_df = pd.read_csv(f'{self.output_dir}/regon_pkd_df', dtype={'regon': str})
 
             entities_ids = []
             for index, row in pkd_df.iterrows():
@@ -416,27 +418,29 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert pkd data into table pkd - {error}")
 
+    def insert_all(self):
+        # Initialize database
+        self.create_db_create_tables()
+
+        # Insert entities data (from regon)
+        self.insert_entity_data()
+        self.insert_local_entity_data()
+        self.insert_pkd_info()
+
+        # Insert additional entities data (from krs)
+        self.insert_general_entities_info()
+        self.insert_representatives_data()
+
+        # Insert shareholders and bank accounts (from infostrefa)
+        self.insert_shareholders_info()
+        self.insert_accounts_info()
+
+        # Insert posts data (from infostrefa and bankier)
+        self.insert_infostrefa_posts()
+        self.insert_bankier_posts()
+
 
 if __name__ == '__main__':
     path = os.path.abspath(os.path.join(os.getcwd(), '..', '..', 'database')) + "\\KNF_sentiment.db"
     db_manager = DataBaseManager(db_path=path, clear_database=True)
-
-    # Initialize database
-    db_manager.create_db_create_tables()
-
-    # Insert entities data (from regon)
-    db_manager.insert_entity_data()
-    db_manager.insert_local_entity_data()
-    db_manager.insert_pkd_info()
-
-    # Insert additional entities data (from krs)
-    db_manager.insert_general_entities_info()
-    db_manager.insert_representatives_data()
-
-    # Insert shareholders and bank accounts (from infostrefa)
-    db_manager.insert_shareholders_info()
-    db_manager.insert_accounts_info()
-
-    # Insert posts data (from infostrefa and bankier)
-    db_manager.insert_infostrefa_posts()
-    db_manager.insert_bankier_posts()
+    db_manager.insert_all()
