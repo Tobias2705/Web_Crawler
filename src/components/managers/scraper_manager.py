@@ -5,7 +5,7 @@ from src.components.krs_scraper.krs_scrapper import KrsScrapper
 from src.components.regon_scraper.regon_scraper import RegonScraper
 from src.components.stock_name_scraper.stock_name_scraper import StockNameScraper
 from src.components.bankier_scrapper.bankier_scrapper import BankierScraper
-from src.components.sentyment.Sentyment import analyze_text
+from src.components.sentyment.Sentyment import analyze_text, get_sentyment_analysis,generate_time_table
 
 from threading import Thread
 import pandas as pd
@@ -50,6 +50,13 @@ class ScraperManager:
         infostrefa_thread.join()
         bankier_thread.join()
         print('Stopped scraping infostrefa and aleo...')
+
+        print('Sentiment analysis started ')
+
+        self.sentyment_df=get_sentyment_analysis(self.infostrefa_news_df)
+        self.time_df=generate_time_table(self.infostrefa_news_df)
+
+        print('Analysis finished')
 
     def _run_aleo_scraper(self):
         # scraping from regon NIPs
@@ -144,26 +151,6 @@ class ScraperManager:
         self.regon_pkd_df = regon_pkd
 
 
-    def generate_time_table(self):
-        time_df = self.infostrefa_news_df.copy()
-        time_df['Timestamp'] = pd.to_datetime(time_df['data'], format='%H:%M %d/%m/%Y')
-        time_df['Time_id'] = time_df['Timestamp'].dt.astype(str)
-        time_df['Hour'] = time_df['Timestamp'].dt.hour
-        time_df['Day'] = time_df['Timestamp'].dt.day
-        time_df['Month'] = time_df['Timestamp'].dt.month
-        time_df['Year'] = time_df['Timestamp'].dt.year
-        time_df=time_df[['Time_id','Hour','Day','Month','Year']]
-        self.time_df=time_df
-
-    def get_sentyment_analysis(self):
-        sentyment_df=self.infostrefa_news_df.copy()
-        sentyment_df['Timestamp'] = pd.to_datetime(sentyment_df['data'], format='%H:%M %d/%m/%Y')
-        sentyment_df['Time_id'] = sentyment_df['Timestamp'].dt.astype(str)
-        sentyment_df['typ_oceny']=sentyment_df['wiadomosc'].apply(lambda x:analyze_text(x))
-        sentyment_df=sentyment_df.rename(columns={'spolka':'id_spolki'})
-        sentyment_df=sentyment_df[['id_spolki','Time_id','typ_oceny']]
-        self.sentyment_df=sentyment_df
-
     def _get_results(self):
         results = {
             'regon_entity_df': self.regon_entity_df.copy(),
@@ -174,7 +161,9 @@ class ScraperManager:
             'aleo_account_numbers_df': self.aleo_account_numbers_df.copy(),
             'aleo_shareholders_df': self.aleo_shareholders_df.copy(),
             'infostrefa_news_df': self.infostrefa_news_df.copy(),
-            'bankier_news_df': self.bankier_news_df.copy()
+            'bankier_news_df': self.bankier_news_df.copy(),
+            'sentyment_df':self.sentyment_df.copy(),
+            'time_df':self.time_df
         }
         return results
 

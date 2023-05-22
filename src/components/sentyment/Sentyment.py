@@ -1,6 +1,7 @@
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk.stem import WordNetLemmatizer
+import pandas as pd
 
 nltk.download('vader_lexicon')
 nltk.download('wordnet')
@@ -57,3 +58,22 @@ def analyze_text(text):
             return 'slightly negative'
     else:
         return 'neutral'
+
+def generate_time_table(infostrefa_news_df):
+    time_df = infostrefa_news_df.copy()
+    time_df['Timestamp'] = pd.to_datetime(time_df['data'], format='%H:%M %d/%m/%Y')
+    time_df['time_id'] = time_df['Timestamp'].dt.astype(str)
+    time_df['godzina'] = time_df['Timestamp'].dt.hour
+    time_df['dzien'] = time_df['Timestamp'].dt.day
+    time_df['mesiac'] = time_df['Timestamp'].dt.month
+    time_df['rok'] = time_df['Timestamp'].dt.year
+    time_df=time_df[['time_id','dzien','mesiac','rok','godzina']]
+    return time_df
+def get_sentyment_analysis(infostrefa_news_df):
+    sentyment_df=infostrefa_news_df.copy()
+    sentyment_df['Timestamp'] = pd.to_datetime(sentyment_df['data'], format='%H:%M %d/%m/%Y')
+    sentyment_df['Time_id'] = sentyment_df['Timestamp'].dt.astype(str)
+    sentyment_df['typ_oceny']=sentyment_df['wiadomosc'].apply(lambda x:analyze_text(x))
+    sentyment_df=sentyment_df.rename(columns={'spolka':'nip'})
+    sentyment_df=sentyment_df[['nip','typ_oceny']]
+    return sentyment_df
