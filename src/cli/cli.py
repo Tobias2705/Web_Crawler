@@ -23,7 +23,6 @@ def scrap(file, database, clear):
     scraper_manager.scrap()
 
     csv_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', 'components', 'managers', 'output')
-
     if not os.path.exists(csv_dir):
         os.makedirs(csv_dir)
 
@@ -32,8 +31,11 @@ def scrap(file, database, clear):
     if not database:
         return
 
-    db_path = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', 'database', 'KNF_sentiment.db')
-    db_manager = DataBaseManager(db_path=db_path, clear_database=clear)
+    db_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', 'database')
+    if not os.path.exists(db_dir):
+        os.makedirs(db_dir)
+
+    db_manager = DataBaseManager(db_path=os.path.join(db_dir, 'KNF_sentiment.db'), clear_database=clear)
     db_manager.insert_all()
 
 
