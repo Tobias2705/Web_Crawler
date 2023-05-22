@@ -51,12 +51,12 @@ class ScraperManager:
         bankier_thread.join()
         print('Stopped scraping infostrefa and aleo...')
 
-        print('Sentiment analysis started ')
-
-        self.sentyment_df=get_sentyment_analysis(self.infostrefa_news_df)
-        self.time_df=generate_time_table(self.infostrefa_news_df)
-
-        print('Analysis finished')
+        # print('Sentiment analysis started ')
+        #
+        # self.sentyment_df=get_sentyment_analysis(self.infostrefa_news_df)
+        # self.time_df=generate_time_table(self.infostrefa_news_df)
+        #
+        # print('Analysis finished')
 
     def _run_aleo_scraper(self):
         # scraping from regon NIPs
@@ -161,9 +161,9 @@ class ScraperManager:
             'aleo_account_numbers_df': self.aleo_account_numbers_df.copy(),
             'aleo_shareholders_df': self.aleo_shareholders_df.copy(),
             'infostrefa_news_df': self.infostrefa_news_df.copy(),
-            'bankier_news_df': self.bankier_news_df.copy(),
-            'sentyment_df':self.sentyment_df.copy(),
-            'time_df':self.time_df
+            'bankier_news_df': self.bankier_news_df.copy()
+            # 'sentyment_df':self.sentyment_df.copy(),
+            # 'time_df':self.time_df
         }
         return results
 
