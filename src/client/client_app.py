@@ -52,18 +52,21 @@ class MainWindow(QMainWindow):
 
         commands_btn = QPushButton('Wykonaj zapytanie')
         tables_btn = QPushButton('Pokaż tabele')
+        analysis_btn = QPushButton('Wyniki analizy')
         export_btn = QPushButton('Eksport do CSV')
 
         text_edit = QTextEdit()
 
         nav_layout.addWidget(commands_btn)
         nav_layout.addWidget(tables_btn)
+        nav_layout.addWidget(analysis_btn)
         nav_layout.addWidget(export_btn)
         layout.addWidget(nav_bar)
         layout.addWidget(text_edit)
 
         commands_btn.clicked.connect(self._execute_command_dialog)
         tables_btn.clicked.connect(self._show_table_dialog)
+        analysis_btn.clicked.connect(self._show_analysis_dialog)
         export_btn.clicked.connect(self._export_to_csv_dialog)
 
     def _execute_command_dialog(self) -> None:
@@ -229,6 +232,86 @@ class MainWindow(QMainWindow):
             dialog.accept()
         except Exception as e:
             QMessageBox.warning(self, 'Błąd', 'Wystąpił błąd podczas wyświetlania tabeli: {}'.format(str(e)))
+            dialog.reject()
+
+    def _show_analysis_dialog(self) -> None:
+        """
+            Private method used to create dialog window for the display of sentiment analysis for chosen entities.
+
+            :param: None.
+            :return: None.
+        """
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Pokaż wyniki analizy')
+        dialog.setModal(True)
+
+        layout = QGridLayout(dialog)
+
+        table_label = QLabel('Wybierz podmiot:')
+        table_combo = QComboBox()
+
+        ok_button = QPushButton('Wyświetl')
+        cancel_button = QPushButton('Anuluj')
+
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute("SELECT nazwa FROM podmiot")
+        rows = c.fetchall()
+
+        for row in rows:
+            table_combo.addItem(row[0])
+        conn.close()
+
+        layout.addWidget(table_label, 0, 0)
+        layout.addWidget(table_combo, 0, 1)
+        layout.addWidget(ok_button, 1, 0)
+        layout.addWidget(cancel_button, 1, 1)
+
+        ok_button.clicked.connect(lambda: self._show_analysis(table_combo.currentText(), dialog))
+        cancel_button.clicked.connect(dialog.reject)
+
+        dialog.exec_()
+
+    def _show_analysis(self, entity: str, dialog: QDialog) -> None:
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            c.execute(f"SELECT podmiot.nazwa, ocena.typ_oceny, czas.dzien, czas.miesiac, czas.rok FROM podmiot "
+                      f"INNER JOIN ocena ON podmiot.id = ocena.id_podmiotu "
+                      f"INNER JOIN czas ON ocena.id_czasu = czas.id "
+                      f"WHERE podmiot.nazwa='{entity}'")
+            result = c.fetchall()
+            conn.close()
+
+            if result:
+                table = QTableWidget(self)
+                table.setColumnCount(len(result[0]))
+                table.setRowCount(len(result))
+
+                for i, row in enumerate(result):
+                    for j, col in enumerate(row):
+                        item = QTableWidgetItem(str(col))
+                        table.setItem(i, j, item)
+
+                headers = ['Nazwa', 'Typ oceny', 'Dzień', 'Miesiąc', 'Rok']
+                table.setHorizontalHeaderLabels(headers)
+
+                back_btn = QPushButton('Powrót', self)
+                back_btn.clicked.connect(self._show_main_screen)
+
+                layout = QVBoxLayout()
+                layout.addWidget(table)
+                layout.addWidget(back_btn)
+                widget = QWidget()
+                widget.setLayout(layout)
+
+                self.setCentralWidget(widget)
+                self.update()
+            else:
+                self.statusBar().showMessage('Zapytanie nie zwróciło żadnych wyników.')
+            dialog.accept()
+        except Exception as e:
+            QMessageBox.warning(self, 'Błąd', 'Wystąpił błąd podczas wyświetlania wyników analizy: {}'.format(str(e)))
             dialog.reject()
 
     def _export_to_csv_dialog(self) -> None:
