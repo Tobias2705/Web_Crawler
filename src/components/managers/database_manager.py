@@ -20,6 +20,7 @@ class DataBaseManager:
             db_path (str): Contains the path to the database file (.db).
             clear_database (bool): Optional parameter that specifies whether the database tables are deleted at runtime.
     """
+
     def __init__(self, db_path, clear_database=False):
         """
             Initializes the RegonScraper class.
@@ -54,7 +55,32 @@ class DataBaseManager:
 
         return entities_ids
 
-    def create_db_create_tables(self) -> None:
+    @staticmethod
+    def _find_times(conn: sqlite3.Connection, df: pd.DataFrame) -> List[int]:
+        """
+            Private static method used to finding entity identifiers to create relationships between tables in
+            the database.
+
+            :param conn: A `sqlite3.Connection` object representing the connection to the database.
+            :param df: A Pandas `DataFrame` object representing the data to be searched for times identifiers.
+            :return: A list of time identifiers for each row in the `df` DataFrame.
+                     If an entity is not found, the corresponding value in the list will be `None`.
+        """
+        times_ids = []
+        for index, row in df.iterrows():
+            timestamp = pd.to_datetime(row['timestamp'], format='%Y-%m-%d %H:%M:%S')
+            query = f"SELECT id FROM czas WHERE godzina='{timestamp.hour}' AND dzien='{timestamp.day}'" \
+                    f"AND miesiac='{timestamp.month}' AND rok='{timestamp.year}'"
+
+            result = conn.execute(query).fetchall()
+            if result:
+                times_ids.append(result[0][0])
+            else:
+                times_ids.append(None)
+
+        return times_ids
+
+    def _create_db_create_tables(self) -> None:
         """
             Public method used to create tables in database.
 
@@ -74,7 +100,10 @@ class DataBaseManager:
                 cur.execute("DROP TABLE IF EXISTS konto")
                 cur.execute("DROP TABLE IF EXISTS akcjonariusz")
                 cur.execute("DROP TABLE IF EXISTS pkd")
+                cur.execute("DROP TABLE IF EXISTS czas")
+                cur.execute("DROP TABLE IF EXISTS ocena")
 
+            # entity dimension
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS podmiot(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -180,14 +209,36 @@ class DataBaseManager:
                 )
             """)
 
+            # time dimension
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS czas(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    godzina INTEGER,
+                    dzien INTEGER,
+                    miesiac INTEGER,
+                    rok INTEGER
+                )
+            """)
+
+            # fact evaluation
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS ocena(
+                    id_czasu INTEGER,
+                    id_podmiotu INTEGER,
+                    typ_oceny TEXT,
+                    FOREIGN KEY(id_czasu) REFERENCES czas(id),
+                    FOREIGN KEY(id_podmiotu) REFERENCES podmiot(id)
+                )
+            """)
+
             cur.close()
             conn.close()
         except sqlite3.Error as error:
             print(f"Failed to initialize sqlite tables - {error}")
 
-    def insert_entity_data(self) -> None:
+    def _insert_entity_data(self) -> None:
         """
-            Public method used to complete the entity table with the data (from regon) of the scraped entities.
+            Public method used to complete the 'entity' table with the data (from regon) of the scraped entities.
 
             :param: None.
             :return: None.
@@ -204,9 +255,9 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert entities into table podmiot - {error}")
 
-    def insert_local_entity_data(self) -> None:
+    def _insert_local_entity_data(self) -> None:
         """
-            Public method used to complete the local entity table with the data (from regon)
+            Public method used to complete the 'local entity' table with the data (from regon)
             of the scraped local entities.
 
             :param: None.
@@ -215,7 +266,8 @@ class DataBaseManager:
         try:
             conn = sqlite3.connect(self.db_path)
 
-            local_regon_entities_df = pd.read_csv(f'{self.output_dir}/regon_local_entity_df', dtype={'regon': str, 'nip': str})
+            local_regon_entities_df = pd.read_csv(f'{self.output_dir}/regon_local_entity_df',
+                                                  dtype={'regon': str, 'nip': str})
 
             entities_ids = self._find_entities(conn, local_regon_entities_df, 'podmiot', 'nip j.nadrzędnej', 'nip')
 
@@ -229,9 +281,9 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert local entities into table jednostka_lokalna - {error}")
 
-    def insert_general_entities_info(self) -> None:
+    def _insert_general_entities_info(self) -> None:
         """
-            Public method used to update the entity table with the additional data (from krs) of the scraped entities.
+            Public method used to update the 'entity' table with the additional data (from krs) of the scraped entities.
 
             :param: None.
             :return: None.
@@ -240,7 +292,8 @@ class DataBaseManager:
             conn = sqlite3.connect(self.db_path)
             cur = conn.cursor()
 
-            krs_general_df = pd.read_csv(f'{self.output_dir}/krs_general_info_df', dtype={'regon': str, 'nip': str, 'krs': str})
+            krs_general_df = pd.read_csv(f'{self.output_dir}/krs_general_info_df',
+                                         dtype={'regon': str, 'nip': str, 'krs': str})
             for index, row in krs_general_df.iterrows():
                 nip = row['nip']
                 query = "SELECT id FROM podmiot WHERE nip='{}'".format(nip)
@@ -259,9 +312,9 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert additional entities data into table podmiot - {error}")
 
-    def insert_representatives_data(self) -> None:
+    def _insert_representatives_data(self) -> None:
         """
-            Public method used to complete the representative table with the data (from krs) of the scraped entities.
+            Public method used to complete the 'representative' table with the data (from krs) of the scraped entities.
 
             :param: None.
             :return: None.
@@ -283,9 +336,9 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert representatives data into table reprezentant - {error}")
 
-    def insert_infostrefa_posts(self) -> None:
+    def _insert_infostrefa_posts(self) -> None:
         """
-            Public method used to complete the ifnostrefa table with the data of the scraped messages
+            Public method used to complete the 'ifnostrefa' table with the data of the scraped messages
             about entities.
 
             :param: None.
@@ -308,9 +361,9 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert posts data into tables infostrefa & bankier - {error}")
 
-    def insert_bankier_posts(self) -> None:
+    def _insert_bankier_posts(self) -> None:
         """
-            Public method used to complete the bankier table with the data of the scraped messages
+            Public method used to complete the 'bankier' table with the data of the scraped messages
             about entities.
 
             :param: None.
@@ -333,9 +386,9 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert posts data into table bankier - {error}")
 
-    def insert_shareholders_info(self) -> None:
+    def _insert_shareholders_info(self) -> None:
         """
-            Public method used to complete the shareholder table with the data (from aleo) of the scraped entities.
+            Public method used to complete the 'shareholder' table with the data (from aleo) of the scraped entities.
 
             :param: None.
             :return: None.
@@ -358,9 +411,9 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert shareholders data into table akcjonariusz - {error}")
 
-    def insert_accounts_info(self) -> None:
+    def _insert_accounts_info(self) -> None:
         """
-            Public method used to complete the account table with the data (from aleo) of the scraped entities.
+            Public method used to complete the 'account' table with the data (from aleo) of the scraped entities.
 
             :param: None.
             :return: None.
@@ -383,9 +436,9 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert bank accounts data into table konto - {error}")
 
-    def insert_pkd_info(self) -> None:
+    def _insert_pkd_info(self) -> None:
         """
-            Public method used to complete the pkd table with the data (from regon) of the scraped entities.
+            Public method used to complete the 'pkd' table with the data (from regon) of the scraped entities.
 
             :param: None.
             :return: None.
@@ -418,26 +471,94 @@ class DataBaseManager:
         except sqlite3.Error as error:
             print(f"Failed to insert pkd data into table pkd - {error}")
 
+    def _insert_times_info(self) -> None:
+        """
+            Public method used to complete the 'time' table with the data of the scraped forums.
+
+            :param: None.
+            :return: None.
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            times_df = pd.read_csv(f'{self.output_dir}/time_df')
+            times_df.drop(columns=['timestamp'], inplace=True) # do wyjebania przed commitem
+            times_df.drop_duplicates(inplace=True)
+            times_df.to_sql('czas', conn, if_exists='append', index=False)
+
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert time data into table czas - {error}")
+
+    def _insert_analysis_info_data(self) -> None:
+        """
+            Public method used to complete the 'evaluation' table with the results from the analysis of the
+            infostrefa and bankier entries.
+
+            :param: None.
+            :return: None.
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            # Infostrefa
+            sentiment_info_df = pd.read_csv(f'{self.output_dir}/sentiment_info_df', dtype={'nip': str})
+
+            entities_ids = self._find_entities(conn, sentiment_info_df, 'podmiot', 'nip', 'nip')
+            times_ids = self._find_times(conn, sentiment_info_df)
+
+            sentiment_info_df.drop(columns=['nip'], inplace=True)
+            sentiment_info_df.drop(columns=['timestamp'], inplace=True)
+
+            sentiment = sentiment_info_df.assign(id_podmiotu=entities_ids, id_czasu=times_ids)
+            sentiment.to_sql('ocena', conn, if_exists='append', index=False)
+
+            conn.commit()
+
+            # Bankier
+            # bankier_info_df = pd.read_csv(f'{self.output_dir}/sentiment_bankier_df', dtype={'nip': str})
+            #
+            # entities_ids = self._find_entities(conn, bankier_info_df, 'podmiot', 'nip', 'nip')
+            # times_ids = self._find_times(conn, bankier_info_df)
+            #
+            # bankier_info_df.drop(columns=['nip'], inplace=True)
+            # bankier_info_df.drop(columns=['timestamp'], inplace=True)
+            #
+            # sentiment = bankier_info_df.assign(id_podmiotu=entities_ids, id_czasu=times_ids)
+            # sentiment.to_sql('ocena', conn, if_exists='append', index=False)
+            #
+            # conn.commit()
+            conn.close()
+        except sqlite3.Error as error:
+            print(f"Failed to insert time data into table czas - {error}")
+
     def insert_all(self):
         # Initialize database
-        self.create_db_create_tables()
+        self._create_db_create_tables()
+
+        # Initialize time data
+        self._insert_times_info()
 
         # Insert entities data (from regon)
-        self.insert_entity_data()
-        self.insert_local_entity_data()
-        self.insert_pkd_info()
+        self._insert_entity_data()
+        self._insert_local_entity_data()
+        self._insert_pkd_info()
 
         # Insert additional entities data (from krs)
-        self.insert_general_entities_info()
-        self.insert_representatives_data()
+        self._insert_general_entities_info()
+        self._insert_representatives_data()
 
         # Insert shareholders and bank accounts (from infostrefa)
-        self.insert_shareholders_info()
-        self.insert_accounts_info()
+        self._insert_shareholders_info()
+        self._insert_accounts_info()
 
         # Insert posts data (from infostrefa and bankier)
-        self.insert_infostrefa_posts()
-        self.insert_bankier_posts()
+        self._insert_infostrefa_posts()
+        self._insert_bankier_posts()
+
+        # Insert results of sentiment analysis
+        self._insert_analysis_info_data()
 
 
 if __name__ == '__main__':
