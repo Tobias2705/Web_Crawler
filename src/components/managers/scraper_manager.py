@@ -5,7 +5,7 @@ from src.components.krs_scraper.krs_scrapper import KrsScrapper
 from src.components.regon_scraper.regon_scraper import RegonScraper
 from src.components.stock_name_scraper.stock_name_scraper import StockNameScraper
 from src.components.bankier_scrapper.bankier_scrapper import BankierScraper
-from src.components.sentyment.object_sentyment import DataProcessor
+from src.components.sentiment.sentiment import SentimentAnalyzer
 
 from threading import Thread
 import pandas as pd
@@ -27,7 +27,7 @@ class ScraperManager:
         print('Starting scraping regon and krs...')
         regon_thread.start()
         krs_thread.start()
-        # TODO Run aleo with regon and krs in parallel (because it works on nip)
+
         regon_thread.join()
         krs_thread.join()
         print('Stopped scraping regon and krs...')
@@ -51,27 +51,25 @@ class ScraperManager:
         bankier_thread.join()
         print('Stopped scraping infostrefa and aleo...')
 
-        sentyment_info_thread = Thread(target=self._run_info_sentyment)
-        # sentyment_bankier_thread = Thread(target=self._run_bankier_sentyment())
-        time_csv_thread = Thread(target=self._run_time_scv())
+        sentiment_info_thread = Thread(target=self._run_info_sentiment)
+        # sentiment_bankier_thread = Thread(target=self._run_bankier_sentiment())
+        sentiment_time_thread = Thread(target=self._run_time_scv())
+
         print('Sentiment analysis started of infostrefa and bankier')
+        # sentiment_bankier_thread.start()
+        sentiment_info_thread.start()
+        sentiment_time_thread.start()
 
-        # sentyment_bankier_thread.join()
-        sentyment_info_thread.start()
-        sentyment_info_thread.join()
-
+        sentiment_info_thread.join()
+        # sentiment_bankier_thread.join()
+        sentiment_time_thread.join()
         print('Analysis finished')
-        print('Time csv generation')
-        time_csv_thread.start()
-        time_csv_thread.join()
-        print('The End')
 
     def _run_aleo_scraper(self):
         # scraping from regon NIPs
         account_numbers_df = pd.DataFrame(columns=['nip', 'account_number'])
         shareholders_df = pd.DataFrame(columns=['nip', 'shareholder'])
 
-        # TODO Modify to get nips from self.data (without duplicates)
         nips = self.regon_entity_df.nip.copy().drop_duplicates()
 
         for count, nip in enumerate(nips):
@@ -93,15 +91,22 @@ class ScraperManager:
         self.aleo_account_numbers_df = account_numbers_df
         self.aleo_shareholders_df = shareholders_df
 
-    def _run_info_sentyment(self):
-        DataProcess=DataProcessor()
-        self.info_sentyment=DataProcess.get_sentyment_analysis_info(self.infostrefa_news_df)
-    def _run_bankier_sentyment(self):
-        DataProcess=DataProcessor()
-        self.bankier_sentyment = DataProcess.get_sentyment_analysis_bankier(self.bankier_news_df)
+    def _run_info_sentiment(self):
+        sentiment_analyzer = SentimentAnalyzer()
+        self.info_sentiment = sentiment_analyzer.get_sentiment_analysis(self.infostrefa_news_df)
+
+    def _run_bankier_sentiment(self):
+        sentiment_analyzer = SentimentAnalyzer()
+        self.bankier_sentiment = sentiment_analyzer.get_sentiment_analysis(self.bankier_news_df)
+
     def _run_time_scv(self):
-        DataProcess = DataProcessor()
-        self.time_df=DataProcess.generate_time_table(self.infostrefa_news_df)
+        sentiment_analyzer = SentimentAnalyzer()
+
+        info_time_df = sentiment_analyzer.generate_time_table(self.infostrefa_news_df)
+        bank_time_df = pd.DataFrame()
+        # bank_time_df = sentiment_analyzer.generate_time_table(self.bankier_news_df)
+
+        self.time_df = pd.concat([info_time_df, bank_time_df], ignore_index=True)
 
     def _run_stock_name_scraper(self):
         entities_df = self.regon_entity_df[["nazwa", "nip"]].copy().drop_duplicates()
@@ -130,7 +135,7 @@ class ScraperManager:
         for count, row in enumerate(self.data):
             counter = f'{str(count + 1)}/{len(self.data)}'
             try:
-                scraper = KrsScrapper(id = row[0], id_type = row[1])
+                scraper = KrsScrapper(id=row[0], id_type=row[1])
                 gen_info_dict, repr_df = scraper.scrap()
 
                 representants_df = pd.concat([representants_df, repr_df], axis=0).reset_index(drop=True)
@@ -168,7 +173,6 @@ class ScraperManager:
         self.regon_local_entity_df = regon_local_entity_df
         self.regon_pkd_df = regon_pkd
 
-
     def _get_results(self):
         results = {
             'regon_entity_df': self.regon_entity_df.copy(),
@@ -179,10 +183,10 @@ class ScraperManager:
             'aleo_account_numbers_df': self.aleo_account_numbers_df.copy(),
             'aleo_shareholders_df': self.aleo_shareholders_df.copy(),
             'infostrefa_news_df': self.infostrefa_news_df.copy(),
-            'bankier_news_df': self.bankier_news_df.copy(),
-            'sentyment_info_df':self.info_sentyment.copy(),
-            # 'sentyment_bankier_df': self.bankier_sentyment.copy(),
-            'time_df':self.time_df.copy()
+            # 'bankier_news_df': self.bankier_news_df.copy(),
+            'sentiment_info_df': self.info_sentiment.copy(),
+            # 'sentiment_bankier_df': self.bankier_sentiment.copy(),
+            'time_df': self.time_df.copy()
         }
         return results
 
