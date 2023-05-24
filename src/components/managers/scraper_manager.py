@@ -24,24 +24,24 @@ class ScraperManager:
         regon_thread = Thread(target=self._run_regon_scraper)
         krs_thread = Thread(target=self._run_krs_scraper)
 
-        print('Starting scraping regon and krs...')
+        print('Starting scraping regon and krs')
         regon_thread.start()
         krs_thread.start()
 
         regon_thread.join()
         krs_thread.join()
-        print('Stopped scraping regon and krs...')
+        print('Stopped scraping regon and krs\n')
 
         print('Starting scraping stock names')
         self._run_stock_name_scraper()
-        print('Stopped scraping stock names')
+        print('Stopped scraping stock names\n')
 
         # run aleo, infostrefa and bankier parallelly
         aleo_thread = Thread(target=self._run_aleo_scraper)
         infostrefa_thread = Thread(target=self._run_infostrefa_scraper)
         bankier_thread = Thread(target=self._run_bankier_scraper)
 
-        print('Starting scraping infostrefa and aleo...')
+        print('Starting scraping aleo infostrefa and bankier')
         aleo_thread.start()
         infostrefa_thread.start()
         bankier_thread.start()
@@ -49,13 +49,13 @@ class ScraperManager:
         aleo_thread.join()
         infostrefa_thread.join()
         bankier_thread.join()
-        print('Stopped scraping infostrefa and aleo...')
+        print('Stopped scraping aleo infostrefa and bankier\n')
 
         sentiment_info_thread = Thread(target=self._run_info_sentiment)
         sentiment_bankier_thread = Thread(target=self._run_bankier_sentiment())
         sentiment_time_thread = Thread(target=self._run_time_scv())
 
-        print('Sentiment analysis started of infostrefa and bankier')
+        print('Sentiment analysis started')
         sentiment_bankier_thread.start()
         sentiment_info_thread.start()
         sentiment_time_thread.start()
@@ -63,7 +63,7 @@ class ScraperManager:
         sentiment_info_thread.join()
         sentiment_bankier_thread.join()
         sentiment_time_thread.join()
-        print('Analysis finished')
+        print('Sentiment analysis finished')
 
     def _run_aleo_scraper(self):
         # scraping from regon NIPs
@@ -103,8 +103,7 @@ class ScraperManager:
         sentiment_analyzer = SentimentAnalyzer()
 
         info_time_df = sentiment_analyzer.generate_time_table(self.infostrefa_news_df)
-        bank_time_df = pd.DataFrame()
-        # bank_time_df = sentiment_analyzer.generate_time_table(self.bankier_news_df)
+        bank_time_df = sentiment_analyzer.generate_time_table(self.bankier_news_df)
 
         self.time_df = pd.concat([info_time_df, bank_time_df], ignore_index=True)
 

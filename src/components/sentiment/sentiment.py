@@ -2,8 +2,8 @@ import nltk
 from nltk.stem import WordNetLemmatizer
 import pandas as pd
 
-nltk.download('vader_lexicon')
-nltk.download('wordnet')
+nltk.download('vader_lexicon', quiet=True)
+nltk.download('wordnet', quiet=True)
 
 
 class SentimentAnalyzer:
@@ -33,7 +33,7 @@ class SentimentAnalyzer:
         self.analyze_bankier = analyze_bankier
 
     def analyze_text(self, text):
-        result = {'neg': 0.0, 'neu': 0.0, 'pos': 0.1, 'compound': 0.0}
+        result = {'neg': 0.0, 'neu': 0.0, 'pos': 0.0, 'compound': 0.0}
         for word in text.split():
             for category, keyword_list in self.sentiment_dict.items():
                 if word in keyword_list or self.lemmatizer.lemmatize(word) in keyword_list:
@@ -57,19 +57,19 @@ class SentimentAnalyzer:
 
         label = max(result)
         if result[label] == 0:
-            return 'neutral'
+            return 'neutralny'
         elif label == 'pos':
             if result['pos'] > (result['neg'] + result['neu']) * 2:
-                return 'positive'
+                return 'pozytywny'
             else:
-                return 'slightly positive'
+                return 'częściowo pozytywny'
         elif label == 'neg':
             if result['neg'] > (result['pos'] + result['neu']) * 2:
-                return 'negative'
+                return 'negatywny'
             else:
-                return 'slightly negative'
+                return 'częściowo negatywny'
         else:
-            return 'neutral'
+            return 'neutralny'
 
     def generate_time_table(self, df):
         time_df = pd.DataFrame()

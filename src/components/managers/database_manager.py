@@ -482,7 +482,6 @@ class DataBaseManager:
             conn = sqlite3.connect(self.db_path)
 
             times_df = pd.read_csv(f'{self.output_dir}/time_df')
-            times_df.drop(columns=['timestamp'], inplace=True) # do wyjebania przed commitem
             times_df.drop_duplicates(inplace=True)
             times_df.to_sql('czas', conn, if_exists='append', index=False)
 
