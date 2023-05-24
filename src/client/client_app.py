@@ -58,7 +58,7 @@ class MainWindow(QMainWindow):
         tables_btn = QPushButton('Pokaż tabele')
         analysis_btn = QPushButton('Anliza - tabela')
         analysis_plt_btn = QPushButton('Analiza - wykres')
-        export_btn = QPushButton('Eksport do CSV')
+        export_btn = QPushButton('Eksportuj do EXCEL')
 
         text_edit = QTextEdit()
 
@@ -452,7 +452,7 @@ class MainWindow(QMainWindow):
             :return: None.
         """
         dialog = QDialog(self)
-        dialog.setWindowTitle('Eksportuj do CSV')
+        dialog.setWindowTitle('Eksportuj do EXCEL')
         dialog.setModal(True)
 
         layout = QGridLayout(dialog)
@@ -525,11 +525,22 @@ class MainWindow(QMainWindow):
 
             if result:
                 headers = [description[0] for description in c.description]
-                with open(location, mode='w', newline='') as csv_file:
+                columns_to_format = ['nip', 'regon']
+
+                with open(location, mode='w', newline='', encoding='utf-8-sig') as csv_file:
                     writer = csv.writer(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+
                     writer.writerow(headers)
+
                     for row in result:
-                        writer.writerow(row)
+                        formatted_row = []
+                        for i, cell in enumerate(row):
+                            column_name = c.description[i][0]
+                            if column_name in columns_to_format:
+                                formatted_row.append('="' + str(cell) + '"')
+                            else:
+                                formatted_row.append(cell)
+                        writer.writerow(formatted_row)
 
                 self.statusBar().showMessage('Tabela została wyeksportowana do pliku CSV.')
             else:
