@@ -52,16 +52,16 @@ class ScraperManager:
         print('Stopped scraping infostrefa and aleo...')
 
         sentiment_info_thread = Thread(target=self._run_info_sentiment)
-        # sentiment_bankier_thread = Thread(target=self._run_bankier_sentiment())
+        sentiment_bankier_thread = Thread(target=self._run_bankier_sentiment())
         sentiment_time_thread = Thread(target=self._run_time_scv())
 
         print('Sentiment analysis started of infostrefa and bankier')
-        # sentiment_bankier_thread.start()
+        sentiment_bankier_thread.start()
         sentiment_info_thread.start()
         sentiment_time_thread.start()
 
         sentiment_info_thread.join()
-        # sentiment_bankier_thread.join()
+        sentiment_bankier_thread.join()
         sentiment_time_thread.join()
         print('Analysis finished')
 
@@ -183,9 +183,9 @@ class ScraperManager:
             'aleo_account_numbers_df': self.aleo_account_numbers_df.copy(),
             'aleo_shareholders_df': self.aleo_shareholders_df.copy(),
             'infostrefa_news_df': self.infostrefa_news_df.copy(),
-            # 'bankier_news_df': self.bankier_news_df.copy(),
+            'bankier_news_df': self.bankier_news_df.copy(),
             'sentiment_info_df': self.info_sentiment.copy(),
-            # 'sentiment_bankier_df': self.bankier_sentiment.copy(),
+            'sentiment_bankier_df': self.bankier_sentiment.copy(),
             'time_df': self.time_df.copy()
         }
         return results

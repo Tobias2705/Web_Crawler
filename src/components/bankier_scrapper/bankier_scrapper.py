@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 
 class BankierScraper:
@@ -24,10 +25,6 @@ class BankierScraper:
         self.print_info = print_info
 
     def get_data(self):
-        self.driver.get('https://infostrefa.com/infostrefa/pl/index/')
-        self.driver.delete_all_cookies()
-        self.driver.execute_script("window.localStorage.clear()")
-        self.driver.find_element(By.ID, 'rodoButtonAccept').click()
         for count, entity in enumerate(self.entities.itertuples()):
             counter = str(count+1) + '/' + str(len(self.entities))
             try:
@@ -61,7 +58,12 @@ class BankierScraper:
             self.driver.get(f"https://bankier.pl{link}")
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
-            date = soup.find('div', {'class': 'm-article-attributes'}).find_all('div')[0].text
+            article_attributes = soup.find('div', {'class': 'm-article-attributes'}).find_all('div')
+            date = ''
+            for attribute in article_attributes:
+                if "publikacja" in attribute.text:
+                    date = attribute.find('span').text
+                    date = datetime.strptime(date, "%Y-%m-%d %H:%M").strftime("%H:%M %d/%m/%Y")
             news_section = soup.find('section', {'class': 'o-article-content'})
             paragraphs = news_section.find_all('p')
             news = ''
@@ -93,6 +95,7 @@ class BankierScraper:
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
             date = soup.find('div', {'class': 'm-article-attributes'}).find_all('div')[0].text
+            date = datetime.strptime(date, "%Y-%m-%d %H:%M").strftime("%H:%M %d/%m/%Y")
             td_elements = soup.find_all('td', {'colspan': True})
             tr_element = None
             for td in td_elements:
@@ -124,6 +127,7 @@ class BankierScraper:
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
             date = soup.find('div', {'class': 'entry-meta'}).find('time', {'class': 'entry-date'}).text.strip()
+            date = datetime.strptime(date, "%Y-%m-%d %H:%M").strftime("%H:%M %d/%m/%Y")
             show_all = soup.find('a', {'id': 'showAllThread'})
             text = ''
             if show_all:
