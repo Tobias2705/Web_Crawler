@@ -5,8 +5,8 @@ import os
 import pathlib
 
 from src.client.client_app import MainWindow
-from src.components.managers.database_manager import DataBaseManager
-from src.components.managers.scraper_manager import ScraperManager
+from src.managers.database_manager import DataBaseManager
+from src.managers.scraper_manager import ScraperManager
 
 
 @click.group()

@@ -1,11 +1,11 @@
-from src.components.input_validator.input_validator import InputValidator
-from src.components.aleo_scraper.AleoScrapper import get_href_links
-from src.components.infostrefa_scrapper.infostrefa_scrapper import InfoStrefaScrapper
-from src.components.krs_scraper.krs_scrapper import KrsScrapper
-from src.components.regon_scraper.regon_scraper import RegonScraper
-from src.components.stock_name_scraper.stock_name_scraper import StockNameScraper
-from src.components.bankier_scrapper.bankier_scrapper import BankierScraper
-from src.components.sentiment.sentiment import SentimentAnalyzer
+from src.input_validator.input_validator import InputValidator
+from src.scrapers.AleoScrapper import get_href_links
+from src.scrapers.infostrefa_scrapper import InfoStrefaScrapper
+from src.scrapers.krs_scrapper import KrsScrapper
+from src.scrapers.regon_scraper import RegonScraper
+from src.scrapers.stock_name_scraper import StockNameScraper
+from src.scrapers.bankier_scrapper import BankierScraper
+from src.sentiment.sentiment import SentimentAnalyzer
 
 from threading import Thread
 import pandas as pd
@@ -195,6 +195,6 @@ class ScraperManager:
 
 
 if __name__ == '__main__':
-    manager = ScraperManager('input.txt', log_scrap_info=True)
+    manager = ScraperManager('../../examples/input.txt', log_scrap_info=True)
     manager.scrap()
     manager.save_to_csv(path='output/')

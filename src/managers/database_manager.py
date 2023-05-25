@@ -561,6 +561,6 @@ class DataBaseManager:
 
 
 if __name__ == '__main__':
-    path = os.path.abspath(os.path.join(os.getcwd(), '..', '..', 'database')) + "\\KNF_sentiment.db"
+    path = os.path.abspath(os.path.join(os.getcwd(), '../components', '..', 'database')) + "\\KNF_sentiment.db"
     db_manager = DataBaseManager(db_path=path, clear_database=True)
     db_manager.insert_all()
