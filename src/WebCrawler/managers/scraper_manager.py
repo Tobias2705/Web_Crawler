@@ -1,15 +1,11 @@
-from src.input_validator.input_validator import InputValidator
-from src.scrapers.AleoScrapper import get_href_links
-from src.scrapers.infostrefa_scrapper import InfoStrefaScrapper
-from src.scrapers.krs_scrapper import KrsScrapper
-from src.scrapers.regon_scraper import RegonScraper
-from src.scrapers.stock_name_scraper import StockNameScraper
-from src.scrapers.bankier_scrapper import BankierScraper
-from src.sentiment.sentiment import SentimentAnalyzer
+from WebCrawler.input_validator import InputValidator
+from WebCrawler.scrapers import *
+from WebCrawler.sentiment import SentimentAnalyzer
 
 from threading import Thread
 import pandas as pd
 import os
+import pathlib
 
 
 class ScraperManager:
@@ -195,6 +191,17 @@ class ScraperManager:
 
 
 if __name__ == '__main__':
-    manager = ScraperManager('../../examples/input.txt', log_scrap_info=True)
+
+    input_path = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', '..', '..', 'examples', 'input.txt')
+    manager = ScraperManager(input_path, log_scrap_info=True)
     manager.scrap()
-    manager.save_to_csv(path='output/')
+
+    output_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', '..', '..', 'output')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    csv_dir = os.path.join(output_dir, 'csv')
+    if not os.path.exists(csv_dir):
+        os.makedirs(csv_dir)
+
+    manager.save_to_csv(path=csv_dir)
