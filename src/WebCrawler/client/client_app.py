@@ -27,8 +27,8 @@ class MainWindow(QMainWindow):
     """
     def __init__(self):
         super().__init__()
-        path = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', 'database')
-        self.db_path = os.path.abspath(path) + "\\KNF_sentiment.db"
+        db_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', '..', '..', 'output', 'db')
+        self.db_path = os.path.join(db_dir, 'KNF_sentiment.db')
 
         # Technical variables
         self.setWindowTitle('KNF Sentiment Client')

@@ -4,9 +4,9 @@ from PyQt5.QtWidgets import QApplication
 import os
 import pathlib
 
-from src.client.client_app import MainWindow
-from src.components.managers.database_manager import DataBaseManager
-from src.components.managers.scraper_manager import ScraperManager
+from WebCrawler.client.client_app import MainWindow
+from WebCrawler.managers import DataBaseManager
+from WebCrawler.managers import ScraperManager
 
 
 @click.group()
@@ -22,7 +22,11 @@ def scrap(file, database, clear):
     scraper_manager = ScraperManager(os.path.abspath(file), log_scrap_info=True)
     scraper_manager.scrap()
 
-    csv_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', 'components', 'managers', 'output')
+    output_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', '..', '..', 'output')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    csv_dir = os.path.join(output_dir, 'csv')
     if not os.path.exists(csv_dir):
         os.makedirs(csv_dir)
 
@@ -31,13 +35,14 @@ def scrap(file, database, clear):
     if not database:
         return
 
-    db_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', 'database')
+    db_dir = os.path.join(output_dir, 'db')
     if not os.path.exists(db_dir):
         os.makedirs(db_dir)
 
-    db_manager = DataBaseManager(db_path=os.path.join(db_dir, 'KNF_sentiment.db'), clear_database=clear)
-    db_manager.insert_all()
+    db_path = os.path.join(db_dir, 'KNF_sentiment.db')
 
+    db_manager = DataBaseManager(db_path=db_path, clear_database=clear)
+    db_manager.insert_all()
 
 
 @click.command()

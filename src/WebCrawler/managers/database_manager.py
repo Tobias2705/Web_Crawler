@@ -27,7 +27,8 @@ class DataBaseManager:
         """
         self.db_path = db_path
         self.clear_database = clear_database
-        self.output_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), 'output')
+        self.output_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', '..', '..', 'output', 'csv')
+
 
     @staticmethod
     def _find_entities(conn: sqlite3.Connection, df: pd.DataFrame, table: str, column: str, compare: str) -> List[int]:
@@ -534,33 +535,71 @@ class DataBaseManager:
 
     def insert_all(self):
         # Initialize database
-        self._create_db_create_tables()
+        try:
+            self._create_db_create_tables()
+        except Exception as e:
+            print("Couldn't create database tables")
+            print(e)
 
         # Initialize time data
-        self._insert_times_info()
+        try:
+            self._insert_times_info()
+        except Exception as e:
+            print("Couldn't insert times info")
+            print(e)
 
         # Insert entities data (from regon)
-        self._insert_entity_data()
-        self._insert_local_entity_data()
-        self._insert_pkd_info()
+        try:
+            self._insert_entity_data()
+            self._insert_local_entity_data()
+            self._insert_pkd_info()
+        except Exception as e:
+            print("Couldn't insert regon data")
+            print(e)
 
         # Insert additional entities data (from krs)
-        self._insert_general_entities_info()
-        self._insert_representatives_data()
+        try:
+            self._insert_general_entities_info()
+            self._insert_representatives_data()
+        except Exception as e:
+            print("Couldn't insert krs data")
+            print(e)
 
         # Insert shareholders and bank accounts (from infostrefa)
-        self._insert_shareholders_info()
-        self._insert_accounts_info()
+        try:
+            self._insert_shareholders_info()
+            self._insert_accounts_info()
+        except Exception as e:
+            print("Couldn't insert bank accounts and shareholders data")
+            print(e)
 
         # Insert posts data (from infostrefa and bankier)
-        self._insert_infostrefa_posts()
-        self._insert_bankier_posts()
+        try:
+            self._insert_infostrefa_posts()
+            self._insert_bankier_posts()
+        except Exception as e:
+            print("Couldn't insert infostrefa and bankier data")
+            print(e)
 
         # Insert results of sentiment analysis
-        self._insert_analysis_info_data()
+        try:
+            self._insert_analysis_info_data()
+        except Exception as e:
+            print("Couldn't insert analysis data")
+            print(e)
 
 
 if __name__ == '__main__':
-    path = os.path.abspath(os.path.join(os.getcwd(), '..', '..', 'database')) + "\\KNF_sentiment.db"
-    db_manager = DataBaseManager(db_path=path, clear_database=True)
+
+    output_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', '..', '..', 'output')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    db_dir = os.path.join(output_dir, 'db')
+    if not os.path.exists(db_dir):
+        os.makedirs(db_dir)
+
+    db_path = os.path.join(db_dir, 'KNF_sentiment.db')
+
+    db_manager = DataBaseManager(db_path=db_path, clear_database=True)
     db_manager.insert_all()

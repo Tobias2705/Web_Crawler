@@ -1,5 +1,5 @@
 **/__pycache__/
 **/.idea/
 **geckodriver.log
-src/components/managers/output/
+**/outout/
 *.db
