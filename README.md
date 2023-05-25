@@ -43,8 +43,8 @@ wcrawler gui
 
 ## Autorzy
 
-Tobiasz Gruszczyński
-Jakub Kaczmarek
-Miłosz Grocholewski
+Tobiasz Gruszczyński,
+Jakub Kaczmarek,
+Miłosz Grocholewski,
 Dan Brushko
 
