@@ -68,17 +68,22 @@ def insert_to_db(clear):
 
     db_manager = DataBaseManager(db_path=db_path, clear_database=clear)
     db_manager.insert_all()
+    click.echo("Data inserted")
+
 
 
 @click.command()
-@click.argument('id', required=True)
+@click.argument('entity_id', required=True)
 @click.argument('id_type', required=True)
-def krs(id, id_type):
-    click.echo("Checking KRS...")
+def check_info(entity_id, id_type):
+    click.echo("Checking information about entity...")
 
     try:
-        from WebCrawler.scrapers import KrsScrapper
-        krs_scrapper = KrsScrapper(id, id_type)
+        from WebCrawler.scrapers import KrsScrapper, RegonScraper
+        regon_scraper = RegonScraper()
+        _, local_entities_df, pkd_df = regon_scraper.get_entity_info(entity_id, id_type)
+
+        krs_scrapper = KrsScrapper(entity_id, id_type)
         general_info, representants = krs_scrapper.scrap()
 
         click.echo(f"{'Nazwa: ':<40}{general_info['nazwa']}")
@@ -90,19 +95,26 @@ def krs(id, id_type):
         click.echo(f"{'Data wykr. z Rej. Przed.:  ':<40}{general_info['data_wykr_z_rej_przeds']}")
         click.echo(f"{'Adres www: ':<40}{general_info['adr_www']}")
         click.echo(f"{'Email: ':<40}{general_info['email']}")
-        import pandas as pd
-        representants.drop(columns=['nip'], inplace=True)
-        click.echo("\nZarząd: ")
-        click.echo(representants.to_string())
+        if not representants.empty:
+            click.echo("\nZarząd: ")
+            representants.drop(columns=['nip'], inplace=True)
+            click.echo(representants.to_string())
+        if not local_entities_df.empty:
+            local_entities_df = local_entities_df[['regon', 'nazwa']]
+            click.echo("\nJednostki lokalne: ")
+            click.echo(local_entities_df.to_string())
+        if not pkd_df.empty:
+            click.echo("\nPKD: ")
+            pkd_df.drop(columns=['regon'], inplace=True)
+            click.echo(pkd_df.to_string())
     except:
         click.echo("Couldn't scrap this entity.")
-
 
 
 cli.add_command(scrap)
 cli.add_command(gui)
 cli.add_command(insert_to_db)
-cli.add_command(krs)
+cli.add_command(check_info)
 
 if __name__ == "__main__":
     cli()

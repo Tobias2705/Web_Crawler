@@ -519,18 +519,18 @@ class DataBaseManager:
             conn.commit()
 
             # Bankier
-            # bankier_info_df = pd.read_csv(f'{self.output_dir}/sentiment_bankier_df', dtype={'nip': str})
-            #
-            # entities_ids = self._find_entities(conn, bankier_info_df, 'podmiot', 'nip', 'nip')
-            # times_ids = self._find_times(conn, bankier_info_df)
-            #
-            # bankier_info_df.drop(columns=['nip'], inplace=True)
-            # bankier_info_df.drop(columns=['timestamp'], inplace=True)
-            #
-            # sentiment = bankier_info_df.assign(id_podmiotu=entities_ids, id_czasu=times_ids)
-            # sentiment.to_sql('ocena', conn, if_exists='append', index=False)
-            #
-            # conn.commit()
+            bankier_info_df = pd.read_csv(f'{self.output_dir}/sentiment_bankier_df', dtype={'nip': str})
+
+            entities_ids = self._find_entities(conn, bankier_info_df, 'podmiot', 'nip', 'nip')
+            times_ids = self._find_times(conn, bankier_info_df)
+
+            bankier_info_df.drop(columns=['nip'], inplace=True)
+            bankier_info_df.drop(columns=['timestamp'], inplace=True)
+
+            sentiment = bankier_info_df.assign(id_podmiotu=entities_ids, id_czasu=times_ids)
+            sentiment.to_sql('ocena', conn, if_exists='append', index=False)
+
+            conn.commit()
             conn.close()
         except sqlite3.Error as error:
             self.logger.error(f"Failed to insert time data into table czas - {error}")

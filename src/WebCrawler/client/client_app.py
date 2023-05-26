@@ -12,6 +12,7 @@ import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 
+from PyQt5.QtGui import QTextDocument, QFont
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, \
     QTextEdit, QMessageBox, QDialog, QGridLayout, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, QFileDialog
@@ -33,6 +34,7 @@ class MainWindow(QMainWindow):
         # Technical variables
         self.setWindowTitle('KNF Sentiment Client')
         self.setGeometry(0, 0, 800, 600)
+        self.showMaximized()
 
         self._show_main_screen()
 
@@ -61,6 +63,27 @@ class MainWindow(QMainWindow):
         export_btn = QPushButton('Eksportuj do EXCEL')
 
         text_edit = QTextEdit()
+        text = """
+        Projekt zrealizowany na przedmiot "Hurtownie Danych" we współpracą z Komisją Nadzoru Finansowego.
+
+        W ramach projektu realizowane jest zbieranie danych na temat podmiotów, wpisów nt. tych podmiotów oraz analiza sentymentu wpisu.
+
+        Scrapowane strony:
+        Regon - zbieranie podstawowych informacji o podmiocie
+        KRS - zbieranie podstawowych informacji o podmiocie
+        Aleo - zbieranie podstawowych informacji o podmiocie
+        Bankier - wyciągane są depesze które podlegają ocenie sentymelnej
+        Infostrefa - wyciągane są depesze które podlegają ocenie sentymelnej
+        
+        Autorzy
+        Tobiasz Gruszczyński, Jakub Kaczmarek, Miłosz Grocholewski, Dan Brushko
+        """
+        text_document = QTextDocument()
+        text_document.setPlainText(text)
+        text_edit.setDocument(text_document)
+
+        font = QFont("Arial", 12)
+        text_edit.setFont(font)
 
         nav_layout.addWidget(tables_btn)
         nav_layout.addWidget(commands_btn)

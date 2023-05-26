@@ -20,6 +20,11 @@ Przejdź do głównego folderu projektu i wykonaj następujące polecenie
 ```commandline
 python -m pip install -e .
 ```
+Następnie zainstaluj wymagane biblioteki
+
+```commandline
+pip install -r requirements.txt
+```
 
 ## Przykładowe komendy
 
