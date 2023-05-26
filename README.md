@@ -37,10 +37,6 @@ Uruchomienie graficznego klienta:
 wcrawler gui
 ```
 
-## Specyfikacja
-
-[Link](https://docs.google.com/document/d/1njV13p8Nt5j3mGoJPrZxRO6WMLG8E1tanBWSP12y5iE/edit)
-
 ## Autorzy
 
 Tobiasz Gruszczyński,
