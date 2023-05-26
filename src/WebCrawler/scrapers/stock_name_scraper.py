@@ -6,7 +6,8 @@ from selenium.webdriver.firefox.options import Options as firefoxOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from bs4 import BeautifulSoup
-
+import logging
+from WebCrawler.custom_logger import get_logger
 
 class StockNameScraper:
     def __init__(self, entities: pd.DataFrame, print_info=False):
@@ -18,6 +19,7 @@ class StockNameScraper:
         self.entities = entities
         self.stock_names = []
         self.print_info = print_info
+        self.logger = get_logger()
 
     def get_data(self):
         for count, entity in enumerate(self.entities.itertuples()):
@@ -30,10 +32,10 @@ class StockNameScraper:
                 entity_stock_name = self._get_entity_stock_name(entity_isin)
                 self.stock_names.append(entity_stock_name)
                 if self.print_info:
-                    print(f"{counter} StockNameScraper scraped: {entity.nip}")
+                    self.logger.info(f"{counter} StockNameScraper scraped: {entity.nip}")
             except:
                 if self.print_info:
-                    print(f"{counter} StockNameScraper could not scrap: {entity.nip}")
+                    self.logger.error(f"{counter} StockNameScraper could not scrap: {entity.nip}")
                 self.stock_names.append('')
 
         self.driver.quit()

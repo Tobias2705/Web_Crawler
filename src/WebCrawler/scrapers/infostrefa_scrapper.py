@@ -3,6 +3,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
+import logging
+from WebCrawler.custom_logger import get_logger
 
 
 class InfoStrefaScrapper:
@@ -20,6 +22,7 @@ class InfoStrefaScrapper:
             'wiadomosc'
         ])
         self.print_info = print_info
+        self.logger = get_logger()
 
     def _get_news_links(self):
         self.news_links = []
@@ -53,10 +56,10 @@ class InfoStrefaScrapper:
                 self._get_news_links()
                 self._get_news(entity.nip)
                 if self.print_info:
-                    print(f"{counter} InfostrefaScraper scraped: {entity.nip}")
+                    self.logger.info(f"{counter} InfostrefaScraper scraped: {entity.nip}")
             except:
                 if self.print_info:
-                    print(f"{counter} InfostrefaScraper could not scrap: {entity.nip}")
+                    self.logger.error(f"{counter} InfostrefaScraper could not scrap: {entity.nip}")
 
         self.driver.quit()
         return self.news
