@@ -2,4 +2,5 @@
 **/.idea/
 **geckodriver.log
 **/output/
+**/.ipynb_checkpoints/
 *.db

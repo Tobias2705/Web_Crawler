@@ -2,7 +2,7 @@
 
 ## Opis projektu
 
-Projekt zrealizowany na przedmiot "Hurtownie Danych" ze współpracą z Komisją Nadzoru Finansowego.
+Projekt zrealizowany na przedmiot "Hurtownie Danych" we współpracą z Komisją Nadzoru Finansowego.
 
 W ramach projektu realizowane jest zbieranie danych na temat podmiotów, wpisów nt. tych podmiotów oraz analiza sentymentu wpisu.
 
