@@ -1,6 +1,7 @@
 from WebCrawler.input_validator import InputValidator
 from WebCrawler.scrapers import *
 from WebCrawler.sentiment import SentimentAnalyzer
+from WebCrawler.custom_logger import get_logger
 
 from threading import Thread
 import pandas as pd
@@ -15,29 +16,31 @@ class ScraperManager:
         self.data = data
         self.errors = errors
 
+        self.logger = get_logger()
+
     def scrap(self):
         # run regon and krs scrapers parallelly
         regon_thread = Thread(target=self._run_regon_scraper)
         krs_thread = Thread(target=self._run_krs_scraper)
 
-        print('Starting scraping regon and krs')
+        self.logger.info('Starting scraping regon and krs')
         regon_thread.start()
         krs_thread.start()
 
         regon_thread.join()
         krs_thread.join()
-        print('Stopped scraping regon and krs\n')
+        self.logger.info('Stopped scraping regon and krs')
 
-        print('Starting scraping stock names')
+        self.logger.info('Starting scraping stock names')
         self._run_stock_name_scraper()
-        print('Stopped scraping stock names\n')
+        self.logger.info('Stopped scraping stock names')
 
         # run aleo, infostrefa and bankier parallelly
         aleo_thread = Thread(target=self._run_aleo_scraper)
         infostrefa_thread = Thread(target=self._run_infostrefa_scraper)
         bankier_thread = Thread(target=self._run_bankier_scraper)
 
-        print('Starting scraping aleo infostrefa and bankier')
+        self.logger.info('Starting scraping aleo infostrefa and bankier')
         aleo_thread.start()
         infostrefa_thread.start()
         bankier_thread.start()
@@ -45,13 +48,13 @@ class ScraperManager:
         aleo_thread.join()
         infostrefa_thread.join()
         bankier_thread.join()
-        print('Stopped scraping aleo infostrefa and bankier\n')
+        self.logger.info('Stopped scraping aleo infostrefa and bankier')
 
         sentiment_info_thread = Thread(target=self._run_info_sentiment)
         sentiment_bankier_thread = Thread(target=self._run_bankier_sentiment())
         sentiment_time_thread = Thread(target=self._run_time_scv())
 
-        print('Sentiment analysis started')
+        self.logger.info('Sentiment analysis started')
         sentiment_bankier_thread.start()
         sentiment_info_thread.start()
         sentiment_time_thread.start()
@@ -59,7 +62,7 @@ class ScraperManager:
         sentiment_info_thread.join()
         sentiment_bankier_thread.join()
         sentiment_time_thread.join()
-        print('Sentiment analysis finished')
+        self.logger.info('Sentiment analysis finished')
 
     def _run_aleo_scraper(self):
         # scraping from regon NIPs
@@ -79,10 +82,10 @@ class ScraperManager:
                     shareholders_df.loc[len(shareholders_df)] = [nip, shareholder]
 
                 if self.log_scrap_info:
-                    print(f"{counter} AleoScraper scraped: {nip}")
+                    self.logger.info(f"{counter} AleoScraper scraped: {nip}")
             except:
                 if self.log_scrap_info:
-                    print(f"{counter} AleoScraper could not scrap: {nip}")
+                    self.logger.error(f"{counter} AleoScraper could not scrap: {nip}")
 
         self.aleo_account_numbers_df = account_numbers_df
         self.aleo_shareholders_df = shareholders_df
@@ -136,10 +139,10 @@ class ScraperManager:
                 representants_df = pd.concat([representants_df, repr_df], axis=0).reset_index(drop=True)
                 general_info_df.loc[len(general_info_df)] = gen_info_dict.values()
                 if self.log_scrap_info:
-                    print(f"{counter} KrsScraper scraped: {row}")
+                    self.logger.info(f"{counter} KrsScraper scraped: {row}")
             except:
                 if self.log_scrap_info:
-                    print(f"{counter} KrsScraper could not scrap: {row}")
+                    self.logger.error(f"{counter} KrsScraper could not scrap: {row}")
 
         self.krs_representants_df = representants_df
         self.krs_general_info_df = general_info_df
@@ -159,10 +162,10 @@ class ScraperManager:
                 regon_local_entity_df = pd.concat([regon_local_entity_df, l_df], axis=0).reset_index(drop=True)
                 regon_pkd = pd.concat([regon_pkd, p_df], axis=0).reset_index(drop=True)
                 if self.log_scrap_info:
-                    print(f"{counter} RegonScrapper scraped: {row}")
+                    self.logger.info(f"{counter} RegonScrapper scraped: {row}")
             except:
                 if self.log_scrap_info:
-                    print(f"{counter} RegonScrapper could not scrap: {row}")
+                    self.logger.error(f"{counter} RegonScrapper could not scrap: {row}")
 
         self.regon_entity_df = regon_entity_df
         self.regon_local_entity_df = regon_local_entity_df

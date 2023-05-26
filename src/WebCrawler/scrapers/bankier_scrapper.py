@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 from datetime import datetime
+from WebCrawler.custom_logger import get_logger
 
 
 class BankierScraper:
@@ -23,6 +24,8 @@ class BankierScraper:
             'wiadomosc'
         ])
         self.print_info = print_info
+        self.logger = get_logger()
+
 
     def get_data(self):
         for count, entity in enumerate(self.entities.itertuples()):
@@ -37,10 +40,10 @@ class BankierScraper:
                 self._get_messages(entity.nip)
                 self._get_news(entity.nip)
                 if self.print_info:
-                    print(f"{counter} BankierScraper scraped: {entity.nip}")
+                    self.logger.info(f"{counter} BankierScraper scraped: {entity.nip}")
             except:
                 if self.print_info:
-                    print(f"{counter} BankierScraper could not scrap: {entity.nip}")
+                    self.logger.error(f"{counter} BankierScraper could not scrap: {entity.nip}")
 
         self.driver.quit()
         return self.news

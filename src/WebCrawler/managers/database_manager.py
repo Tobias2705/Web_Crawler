@@ -9,6 +9,7 @@ import sqlite3
 import pandas as pd
 import pathlib
 from typing import List
+from WebCrawler.custom_logger import get_logger
 
 
 class DataBaseManager:
@@ -28,6 +29,7 @@ class DataBaseManager:
         self.db_path = db_path
         self.clear_database = clear_database
         self.output_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', '..', '..', 'output', 'csv')
+        self.logger = get_logger()
 
 
     @staticmethod
@@ -235,7 +237,7 @@ class DataBaseManager:
             cur.close()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to initialize sqlite tables - {error}")
+            self.logger.error(f"Failed to initialize sqlite tables - {error}")
 
     def _insert_entity_data(self) -> None:
         """
@@ -254,7 +256,7 @@ class DataBaseManager:
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert entities into table podmiot - {error}")
+            self.logger.error(f"Failed to insert entities into table podmiot - {error}")
 
     def _insert_local_entity_data(self) -> None:
         """
@@ -280,7 +282,7 @@ class DataBaseManager:
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert local entities into table jednostka_lokalna - {error}")
+            self.logger.error(f"Failed to insert local entities into table jednostka_lokalna - {error}")
 
     def _insert_general_entities_info(self) -> None:
         """
@@ -311,7 +313,7 @@ class DataBaseManager:
             cur.close()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert additional entities data into table podmiot - {error}")
+            self.logger.error(f"Failed to insert additional entities data into table podmiot - {error}")
 
     def _insert_representatives_data(self) -> None:
         """
@@ -335,7 +337,7 @@ class DataBaseManager:
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert representatives data into table reprezentant - {error}")
+            self.logger.error(f"Failed to insert representatives data into table reprezentant - {error}")
 
     def _insert_infostrefa_posts(self) -> None:
         """
@@ -360,7 +362,7 @@ class DataBaseManager:
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert posts data into tables infostrefa & bankier - {error}")
+            self.logger.error(f"Failed to insert posts data into tables infostrefa & bankier - {error}")
 
     def _insert_bankier_posts(self) -> None:
         """
@@ -385,7 +387,7 @@ class DataBaseManager:
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert posts data into table bankier - {error}")
+            self.logger.error(f"Failed to insert posts data into table bankier - {error}")
 
     def _insert_shareholders_info(self) -> None:
         """
@@ -410,7 +412,7 @@ class DataBaseManager:
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert shareholders data into table akcjonariusz - {error}")
+            self.logger.error(f"Failed to insert shareholders data into table akcjonariusz - {error}")
 
     def _insert_accounts_info(self) -> None:
         """
@@ -435,7 +437,7 @@ class DataBaseManager:
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert bank accounts data into table konto - {error}")
+            self.logger.error(f"Failed to insert bank accounts data into table konto - {error}")
 
     def _insert_pkd_info(self) -> None:
         """
@@ -470,7 +472,7 @@ class DataBaseManager:
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert pkd data into table pkd - {error}")
+            self.logger.error(f"Failed to insert pkd data into table pkd - {error}")
 
     def _insert_times_info(self) -> None:
         """
@@ -489,7 +491,7 @@ class DataBaseManager:
             conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert time data into table czas - {error}")
+            self.logger.error(f"Failed to insert time data into table czas - {error}")
 
     def _insert_analysis_info_data(self) -> None:
         """
@@ -531,22 +533,20 @@ class DataBaseManager:
             # conn.commit()
             conn.close()
         except sqlite3.Error as error:
-            print(f"Failed to insert time data into table czas - {error}")
+            self.logger.error(f"Failed to insert time data into table czas - {error}")
 
     def insert_all(self):
         # Initialize database
         try:
             self._create_db_create_tables()
         except Exception as e:
-            print("Couldn't create database tables")
-            print(e)
+            self.logger.error(f"Couldn't create database tables - {e}")
 
         # Initialize time data
         try:
             self._insert_times_info()
         except Exception as e:
-            print("Couldn't insert times info")
-            print(e)
+            self.logger.error(f"Couldn't insert times info - {e}")
 
         # Insert entities data (from regon)
         try:
@@ -554,39 +554,34 @@ class DataBaseManager:
             self._insert_local_entity_data()
             self._insert_pkd_info()
         except Exception as e:
-            print("Couldn't insert regon data")
-            print(e)
+            self.logger.error(f"Couldn't insert regon data - {e}")
 
         # Insert additional entities data (from krs)
         try:
             self._insert_general_entities_info()
             self._insert_representatives_data()
         except Exception as e:
-            print("Couldn't insert krs data")
-            print(e)
+            self.logger.error(f"Couldn't insert krs data {e}")
 
         # Insert shareholders and bank accounts (from infostrefa)
         try:
             self._insert_shareholders_info()
             self._insert_accounts_info()
         except Exception as e:
-            print("Couldn't insert bank accounts and shareholders data")
-            print(e)
+            self.logger.error(f"Couldn't insert bank accounts and shareholders data {e}")
 
         # Insert posts data (from infostrefa and bankier)
         try:
             self._insert_infostrefa_posts()
             self._insert_bankier_posts()
         except Exception as e:
-            print("Couldn't insert infostrefa and bankier data")
-            print(e)
+            self.logger.error(f"Couldn't insert infostrefa and bankier data {e}")
 
         # Insert results of sentiment analysis
         try:
             self._insert_analysis_info_data()
         except Exception as e:
-            print("Couldn't insert analysis data")
-            print(e)
+            self.logger.error(f"Couldn't insert analysis data {e}")
 
 
 if __name__ == '__main__':
