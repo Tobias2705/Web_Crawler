@@ -26,7 +26,7 @@ python -m pip install -e .
 Uruchomienie scrapowania:
 
 ```commandline
-wcrawler file.txt -db -c
+wcrawler scrap file.txt -db -c
 ```
 Flagi:
 - db - zapisanie wyniku do bazy danych
