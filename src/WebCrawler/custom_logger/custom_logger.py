@@ -2,7 +2,7 @@ import logging
 
 class CustomFormatter(logging.Formatter):
 
-    format = "[%(levelname)s] %(asctime)s - %(message)s"
+    format = "[%(levelname)s]\t%(asctime)s\t%(message)s"
 
     FORMATS = {
         logging.INFO: format,
