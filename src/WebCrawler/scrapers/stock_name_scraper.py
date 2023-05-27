@@ -24,7 +24,7 @@ class StockNameScraper:
     def get_data(self):
         for count, entity in enumerate(self.entities.itertuples()):
             self.driver.delete_all_cookies()
-            counter = str(count+1) + '/' + str(len(self.entities))
+            counter = f'{str(count + 1)}/{len(self.entities)}'
             try:
                 entity_isin = self._get_entity_isin(entity.nazwa, 'newconnect')
                 if not entity_isin:

@@ -51,12 +51,11 @@ class BankierScraper:
     def _get_news(self, entity: str):
         news_links = []
         self.driver.get(self.news_link)
-        for i in range(1):
+        for _ in range(1):
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
             news_elements = soup.find('section', {'id': 'articleList'}).find_all('a', {'class': 'more-link'})
-            for news_element in news_elements:
-                news_links.append(news_element.get('href'))
+            news_links.extend(news_element.get('href') for news_element in news_elements)
         for link in news_links:
             self.driver.get(f"https://bankier.pl{link}")
             html = self.driver.page_source
@@ -69,26 +68,22 @@ class BankierScraper:
                     date = datetime.strptime(date, "%Y-%m-%d %H:%M").strftime("%H:%M %d/%m/%Y")
             news_section = soup.find('section', {'class': 'o-article-content'})
             paragraphs = news_section.find_all('p')
-            news = ''
-            for paragraph in paragraphs:
-                news += paragraph.text
+            news = ''.join(paragraph.text for paragraph in paragraphs)
             self.news.loc[len(self.news)] = [entity, date, news]
 
     def _get_messages(self, entity: str):
         messages_links = []
         self.driver.get(self.messages_link)
-        for i in range(1):
+        for _ in range(1):
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
             articles_div = soup.find('section', {'id': 'articleEspiList'})
             div_elements = articles_div.find_all('div', {'class': 'article'})
             for div in div_elements:
-                link_element = div.find('a')
-                if link_element:
+                if link_element := div.find('a'):
                     href = link_element.get('href')
                     messages_links.append(href)
-            next_page_element = articles_div.find('a', {'class': 'next'})
-            if next_page_element:
+            if next_page_element := articles_div.find('a', {'class': 'next'}):
                 self.driver.get(f"https://bankier.pl{next_page_element.get('href')}")
             else:
                 break
@@ -100,28 +95,21 @@ class BankierScraper:
             date = soup.find('div', {'class': 'm-article-attributes'}).find_all('div')[0].text
             date = datetime.strptime(date, "%Y-%m-%d %H:%M").strftime("%H:%M %d/%m/%Y")
             td_elements = soup.find_all('td', {'colspan': True})
-            tr_element = None
-            for td in td_elements:
-                if td.text.strip() == 'Treść raportu:':
-                    tr_element = td.parent
-                    break
-            if tr_element:
-                next_tr = tr_element.find_next_sibling('tr')
-                if next_tr:
+            if tr_element := next((td.parent for td in td_elements if td.text.strip() == 'Treść raportu:'), None):
+                if next_tr := tr_element.find_next_sibling('tr'):
                     td_content = next_tr.find('td', {'colspan': True}).text
                     self.news.loc[len(self.news)] = [entity, date, td_content]
 
     def _get_forum(self, entity: str):
         thread_links = []
         self.driver.get(self.forum_link)
-        for i in range(1):
+        for _ in range(1):
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
             tr_elements = soup.find('table', {'class': 'threadsList'}).find_all('tr')
-            for tr_element in tr_elements:
-                thread_links.append(tr_element.find('a').get('href'))
-            next_btn = soup.find('div', {'class': 'pagination'}).find('a', {'class': 'next'})
-            if next_btn:
+            thread_links.extend(tr_element.find('a').get('href') for tr_element in tr_elements)
+
+            if next_btn := soup.find('div', {'class': 'pagination'}).find('a', {'class': 'next'}):
                 self.driver.get(f"https://bankier.pl{next_btn.get('href')}")
             else:
                 break
@@ -138,13 +126,11 @@ class BankierScraper:
                 while True:
                     html = self.driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
-                    thread_tree = soup.find('ul', {'class': 'threadTree'})
-                    if thread_tree:
+                    if thread_tree := soup.find('ul', {'class': 'threadTree'}):
                         li_elements = thread_tree.find_all('li')
                         for li_element in li_elements:
                             text += li_element.find('div', {'class': 'p'}).text
-                    next_btn = soup.find('div', {'class': 'pagination'}).find('a', {'class': 'next'})
-                    if next_btn:
+                    if next_btn := soup.find('div', {'class': 'pagination'}).find('a', {'class': 'next'}):
                         self.driver.get(f"https://bankier.pl{next_btn.get('href')}")
                     else:
                         break

@@ -72,7 +72,7 @@ class ScraperManager:
         nips = self.regon_entity_df.nip.copy().drop_duplicates()
 
         for count, nip in enumerate(nips):
-            counter = str(count + 1) + '/' + str(len(nips))
+            counter = f'{str(count + 1)}/{len(nips)}'
             try:
                 account_numbers, shareholders = get_href_links(nip)
                 for account_number in account_numbers:
@@ -172,21 +172,7 @@ class ScraperManager:
         self.regon_pkd_df = regon_pkd
 
     def _get_results(self):
-        results = {
-            'regon_entity_df': self.regon_entity_df.copy(),
-            'regon_local_entity_df': self.regon_local_entity_df.copy(),
-            'regon_pkd_df': self.regon_pkd_df.copy(),
-            'krs_representatives_df': self.krs_representants_df.copy(),
-            'krs_general_info_df': self.krs_general_info_df.copy(),
-            'aleo_account_numbers_df': self.aleo_account_numbers_df.copy(),
-            'aleo_shareholders_df': self.aleo_shareholders_df.copy(),
-            'infostrefa_news_df': self.infostrefa_news_df.copy(),
-            'bankier_news_df': self.bankier_news_df.copy(),
-            'sentiment_info_df': self.info_sentiment.copy(),
-            'sentiment_bankier_df': self.bankier_sentiment.copy(),
-            'time_df': self.time_df.copy()
-        }
-        return results
+        return {'regon_entity_df': self.regon_entity_df.copy(), 'regon_local_entity_df': self.regon_local_entity_df.copy(), 'regon_pkd_df': self.regon_pkd_df.copy(), 'krs_representatives_df': self.krs_representants_df.copy(), 'krs_general_info_df': self.krs_general_info_df.copy(), 'aleo_account_numbers_df': self.aleo_account_numbers_df.copy(), 'aleo_shareholders_df': self.aleo_shareholders_df.copy(), 'infostrefa_news_df': self.infostrefa_news_df.copy(), 'bankier_news_df': self.bankier_news_df.copy(), 'sentiment_info_df': self.info_sentiment.copy(), 'sentiment_bankier_df': self.bankier_sentiment.copy(), 'time_df': self.time_df.copy()}
 
     def save_to_csv(self, path=''):
         for k, v in self._get_results().items():

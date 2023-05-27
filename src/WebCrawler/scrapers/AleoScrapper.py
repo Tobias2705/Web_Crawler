@@ -7,21 +7,21 @@ def get_href_links(tax_identifier, print_info = False):
     headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
     url = f"https://aleo.com/int/companies?phrase='{tax_identifier}'"
-    for i in range(10):
+    for _ in range(10):
         response = requests.get(url, headers=headers)
         time.sleep(1)
-    
+
     soup = BeautifulSoup(response.content, "html.parser")
     href_links = []
     for div in soup.find_all("div", {"class": "catalog-row-first-line"}):
-        for a in div.find_all("a", {"class": "catalog-row-first-line__company-name"}):
-            href_links.append(a.get("href"))
+        href_links.extend(a.get("href") for a in div.find_all("a", {"class": "catalog-row-first-line__company-name"}))
+
     if print_info:
         print(href_links[0])
     url=f"https://aleo.com/int/{href_links[0]}"
     if print_info:
         print(url)
-    for i in range(10):
+    for _ in range(10):
         response = requests.get(url, headers=headers)
         time.sleep(1)
     soup = BeautifulSoup(response.content, "html.parser")

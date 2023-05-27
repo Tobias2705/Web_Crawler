@@ -147,7 +147,7 @@ class RegonScraper:
 
         input_data = WebDriverWait(self.driver, 30).until(ec.element_to_be_clickable((By.ID, self.key_type[data_type])))
         time.sleep(0.5)
-        input_data.send_keys(str(key_value))
+        input_data.send_keys(key_value)
 
         submit_button = self.driver.find_element(By.ID, "btnSzukaj")
         submit_button.click()
@@ -175,36 +175,8 @@ class RegonScraper:
             :param entity_type: The local entity type identifier as a string.
             :return: None.
         """
-        row_data = []
         if entity_type in ['fiz', 'praw']:
-            # REGON
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_regon9').text)
-            # NIP
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_nip').text)
-            # NAZWA
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_nazwa').text)
-            # kod i nazwa podstawowej formy prawnej
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_nazwaPodstawowejFormyPrawnej').text)
-            # kod i nazwa szczególnej formy prawnej
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_nazwaSzczegolnejFormyPrawnej').text)
-            # kod i nazwa formy własności
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_nazwaFormyWlasnosci').text)
-            # kraj
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaKraju').text)
-            # województwo
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaWojewodztwa').text)
-            # powiat
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaPowiatu').text)
-            # gmina
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaGminy').text)
-            # miejscowość
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaMiejscowosci').text)
-            # ulica
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaUlicy').text)
-            # nr nieruchomości
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_adSiedzNumerNieruchomosci').text)
-            # kod pocztowy
-            row_data.append(driver.find_element(By.ID, f'{entity_type}_adSiedzKodPocztowy').text)
+            row_data = [driver.find_element(By.ID, f'{entity_type}_regon9').text, driver.find_element(By.ID, f'{entity_type}_nip').text, driver.find_element(By.ID, f'{entity_type}_nazwa').text, driver.find_element(By.ID, f'{entity_type}_nazwaPodstawowejFormyPrawnej').text, driver.find_element(By.ID, f'{entity_type}_nazwaSzczegolnejFormyPrawnej').text, driver.find_element(By.ID, f'{entity_type}_nazwaFormyWlasnosci').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaKraju').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaWojewodztwa').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaPowiatu').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaGminy').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaMiejscowosci').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaUlicy').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNumerNieruchomosci').text, driver.find_element(By.ID, f'{entity_type}_adSiedzKodPocztowy').text]
 
             self._get_pkd(self.driver, entity_type, row_data[0])
             self.entity_data.loc[len(self.entity_data)] = row_data
@@ -219,24 +191,8 @@ class RegonScraper:
             :param entity_type: The local entity type identifier as a string.
             :return: None.
         """
-        row_data = [driver.find_element(By.ID, f'{entity_type}_regon14').text,
-                    driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}_regon').text,
-                    driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}_nip').text,
-                    driver.find_element(By.ID, f'{entity_type}_nazwa').text,
-                    driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}'
-                                               f'_{self.local_entity_form[entity_type+"_p"]}').text,
-                    driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}'
-                                               f'_{self.local_entity_form[entity_type+"_sz"]}').text,
-                    driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}'
-                                               f'_{self.local_entity_form[entity_type+"_wl"]}').text,
-                    driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaKraju').text,
-                    driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaWojewodztwa').text,
-                    driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaPowiatu').text,
-                    driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaGminy').text,
-                    driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaMiejscowosci').text,
-                    driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaUlicy').text,
-                    driver.find_element(By.ID, f'{entity_type}_adSiedzNumerNieruchomosci').text,
-                    driver.find_element(By.ID, f'{entity_type}_adSiedzKodPocztowy').text]
+        row_data = [driver.find_element(By.ID, f'{entity_type}_regon14').text, driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}_regon').text, driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}_nip').text, driver.find_element(By.ID, f'{entity_type}_nazwa').text, driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}_{self.local_entity_form[f"{entity_type}_p"]}').text, driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}_{self.local_entity_form[f"{entity_type}_sz"]}').text, driver.find_element(By.ID, f'{entity_type}_{self.local_entity_type[entity_type]}_{self.local_entity_form[f"{entity_type}_wl"]}').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaKraju').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaWojewodztwa').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaPowiatu').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaGminy').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaMiejscowosci').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNazwaUlicy').text, driver.find_element(By.ID, f'{entity_type}_adSiedzNumerNieruchomosci').text, driver.find_element(By.ID, f'{entity_type}_adSiedzKodPocztowy').text]
+
 
         self._get_pkd(self.driver, entity_type, row_data[0])
         self.local_entity_data.loc[len(self.local_entity_data)] = row_data
@@ -250,16 +206,14 @@ class RegonScraper:
             :return: None.
         """
         self.local_regons = []
-        if entity_type in ['fiz', 'praw']:
-            if 'table' in driver.find_element(By.ID, f'{entity_type}_lokTable').get_attribute('style'):
-                list_button = driver.find_element(By.ID, f'{entity_type}_butLinkLok')
-                list_button.click()
-                time.sleep(0.5)
-                td = driver.find_element(By.ID, f'{entity_type}_lok')
-                body = td.find_element(By.TAG_NAME, 'tbody')
-                rows = body.find_elements(By.TAG_NAME, 'tr')
-                for row in rows:
-                    self.local_regons.append(row.find_element(By.TAG_NAME, 'a').text)
+        if entity_type in ['fiz', 'praw'] and 'table' in driver.find_element(By.ID, f'{entity_type}_lokTable').get_attribute('style'):
+            list_button = driver.find_element(By.ID, f'{entity_type}_butLinkLok')
+            list_button.click()
+            time.sleep(0.5)
+            td = driver.find_element(By.ID, f'{entity_type}_lok')
+            body = td.find_element(By.TAG_NAME, 'tbody')
+            rows = body.find_elements(By.TAG_NAME, 'tr')
+            self.local_regons.extend(row.find_element(By.TAG_NAME, 'a').text for row in rows)
 
     def _get_pkd(self, driver: webdriver, entity_type, regon) -> None:
         """

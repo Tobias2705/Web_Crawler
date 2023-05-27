@@ -28,15 +28,13 @@ class InfoStrefaScrapper:
         self.news_links = []
         pages_num = self.driver.find_element(By.XPATH, "//ul[@class='pagination']/li[last()]").text
 
-        for i in range(min(int(pages_num), 1)):
+        for _ in range(min(int(pages_num), 1)):
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
 
-            for td in soup.select('.search-results table.table.table-condensed.table-data td.text'):
-                self.news_links.append(td.a['href'])
+            self.news_links.extend(td.a['href'] for td in soup.select('.search-results table.table.table-condensed.table-data td.text'))
 
-            next_page_btn = self.driver.find_element(By.XPATH, "//a[contains(@class, 'nav-next')]")
-            if next_page_btn:
+            if next_page_btn := self.driver.find_element(By.XPATH, "//a[contains(@class, 'nav-next')]"):
                 next_page_btn.click()
 
     def get_data(self):
@@ -45,10 +43,9 @@ class InfoStrefaScrapper:
         self.driver.execute_script("window.localStorage.clear()")
         self.driver.find_element(By.ID, 'rodoButtonAccept').click()
         for count, entity in enumerate(self.entities.itertuples()):
-            counter = str(count+1) + '/' + str(len(self.entities))
+            counter = f'{str(count + 1)}/{len(self.entities)}'
             try:
-                entity_id = self._get_entity_id(entity.nazwa_gieldowa)
-                if entity_id:
+                if entity_id := self._get_entity_id(entity.nazwa_gieldowa):
                     self.driver.get(
                         f"https://infostrefa.com/infostrefa/pl/wiadomosci/szukaj/1?company={entity_id}&category=wszystko")
                 else:
@@ -73,8 +70,7 @@ class InfoStrefaScrapper:
 
         for td in td_elements:
             if td.text.lower() == entity.lower():
-                id = td.find('a')['href'].split('/')[-1].split(',')[0]
-                return id
+                return td.find('a')['href'].split('/')[-1].split(',')[0]
 
     def _get_news(self, entity: str):
         for i in range(len(self.news_links)):
@@ -93,9 +89,6 @@ class InfoStrefaScrapper:
                         tds = tr.find_all('td')
                         for index, td in enumerate(tds):
                             text += td.text
-                            if index != len(tds) - 1:
-                                text += ';'
-                            else:
-                                text += '\n'
+                            text += ';' if index != len(tds) - 1 else '\n'
             date = soup.find('div', {'class': 'text-date'}).text
             self.news.loc[len(self.news)] = [entity, date, text]
