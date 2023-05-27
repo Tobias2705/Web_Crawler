@@ -1,7 +1,7 @@
 import nltk
-from nltk.stem import WordNetLemmatizer
 import pandas as pd
 import torch
+from nltk.stem import WordNetLemmatizer
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 nltk.download('vader_lexicon', quiet=True)
@@ -38,6 +38,7 @@ class SentimentAnalyzer:
         self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
     def analyze_text(self, text):
+        #funkcja która zwraca wynik analizy tekstu według wybranego podejśćia analizy sentymentu
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
         outputs = self.model(**inputs)
         sentiment = torch.argmax(outputs.logits, dim=1).item()
@@ -50,6 +51,7 @@ class SentimentAnalyzer:
             return "pozytywny"
 
     def generate_time_table(self, df):
+        #funkcja która przyjmuję dataframe i generuję time id
         time_df = pd.DataFrame()
 
         if self.analyze_bankier:
@@ -65,6 +67,7 @@ class SentimentAnalyzer:
         return time_df
 
     def get_sentiment_analysis(self, df):
+        #funkcja która przyjmuję dataframe do analizy i zwraca dataframe z oceną sentymentu
         sentiment_analysis = df.copy()
 
         if self.analyze_bankier:
