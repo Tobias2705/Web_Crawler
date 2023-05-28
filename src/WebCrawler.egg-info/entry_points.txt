@@ -1,2 +1,0 @@
-[console_scripts]
-wcrawler = WebCrawler.cli.cli:cli
