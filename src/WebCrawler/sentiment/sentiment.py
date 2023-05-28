@@ -7,7 +7,7 @@ nltk.download('wordnet', quiet=True)
 
 
 class SentimentAnalyzer:
-    def __init__(self, analyze_bankier=False):
+    def __init__(self):
         self.sentiment_dict = {
             "pozytywny": ["sukces", "wzrost", "postęp", "dobry", "wynik", "zwiększenie", "dobra", "tendencja",
                           "doskonałe", "wynik", "wygrana", "przychód", "zysk", "dobrze", "prosperujący", "sukces",
@@ -30,7 +30,6 @@ class SentimentAnalyzer:
                       "produkty", "konkurentów", "nowe", "usługi", "rynku"],
         }
         self.lemmatizer = WordNetLemmatizer()
-        self.analyze_bankier = analyze_bankier
 
     def analyze_text(self, text):
         result = {'neg': 0.0, 'neu': 0.0, 'pos': 0.0, 'compound': 0.0}
@@ -73,11 +72,7 @@ class SentimentAnalyzer:
 
     def generate_time_table(self, df):
         time_df = pd.DataFrame()
-
-        if self.analyze_bankier:
-            timestamp = pd.to_datetime(df['data'], format='%Y-%m-%d %H:%M')
-        else:
-            timestamp = pd.to_datetime(df['data'], format='%H:%M %d/%m/%Y')
+        timestamp = pd.to_datetime(df['data'], format='%H:%M %d/%m/%Y')
 
         time_df['godzina'] = timestamp.dt.hour
         time_df['dzien'] = timestamp.dt.day
@@ -88,11 +83,7 @@ class SentimentAnalyzer:
 
     def get_sentiment_analysis(self, df):
         sentiment_analysis = df.copy()
-
-        if self.analyze_bankier:
-            timestamp = pd.to_datetime(df['data'], format='%Y-%m-%d %H:%M')
-        else:
-            timestamp = pd.to_datetime(df['data'], format='%H:%M %d/%m/%Y')
+        timestamp = pd.to_datetime(df['data'], format='%H:%M %d/%m/%Y')
 
         sentiment_analysis['timestamp'] = timestamp.astype(str)
         sentiment_analysis['typ_oceny'] = sentiment_analysis['wiadomosc'].apply(lambda x: self.analyze_text(x))

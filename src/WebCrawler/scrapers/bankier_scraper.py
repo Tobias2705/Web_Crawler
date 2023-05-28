@@ -1,3 +1,9 @@
+"""
+bankier_scraper.py
+====================================
+This module is used to scrape data from bankier.pl website.
+"""
+
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -8,7 +14,21 @@ from WebCrawler.custom_logger import get_logger
 
 
 class BankierScraper:
-    def __init__(self, entities: pd.DataFrame, print_info = False):
+    """
+        Class responsible for scraping data from bankier.pl website.
+
+        Attributes:
+            entities: DataFrame containing entities data.
+            print_info: Flag indicating whether to print information during the scraping process.
+    """
+    def __init__(self, entities: pd.DataFrame, print_info=False):
+        """
+            Initializes an instance of BankierScraper.
+
+            :param entities: DataFrame containing entities data.
+            :param print_info: Flag indicating whether to print information during the scraping process.
+                Defaults to False.
+        """
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
@@ -26,14 +46,21 @@ class BankierScraper:
         self.print_info = print_info
         self.logger = get_logger()
 
+    def get_data(self) -> pd.DataFrame:
+        """
+            Public method used to scrape data from bankier.pl for each entity and returns a DataFrame.
 
-    def get_data(self):
+            :param: None.
+            :return: DataFrame containing scraped data.
+
+        """
         for count, entity in enumerate(self.entities.itertuples()):
             counter = str(count+1) + '/' + str(len(self.entities))
             try:
                 self.driver.get(
                     f"https://www.bankier.pl/inwestowanie/profile/quote.html?symbol={entity.nazwa_gieldowa}")
-                self.forum_link = self.driver.find_element(By.XPATH, "//div[contains(@id, 'boxForum')]/div[contains(@class, 'boxFooter')]/a").get_attribute('href')
+                self.forum_link = self.driver.find_element(By.XPATH, "//div[contains(@id, 'boxForum')]/div[contains("
+                                                                     "@class, 'boxFooter')]/a").get_attribute('href')
                 self.messages_link = self.driver.find_element(By.XPATH, "//a[contains(text(), 'Więcej komunikatów')]").get_attribute('href')
                 self.news_link = self.driver.find_element(By.XPATH, "//a[contains(text(), 'Więcej wiadomości')]").get_attribute('href')
                 self._get_forum(entity.nip)
@@ -48,7 +75,13 @@ class BankierScraper:
         self.driver.quit()
         return self.news
 
-    def _get_news(self, entity: str):
+    def _get_news(self, entity: str) -> None:
+        """
+            Private method used to scrape news for a given entity.
+
+            :param entity: Entity identifier.
+            :return: None.
+        """
         news_links = []
         self.driver.get(self.news_link)
         for i in range(1):
@@ -74,7 +107,13 @@ class BankierScraper:
                 news += paragraph.text
             self.news.loc[len(self.news)] = [entity, date, news]
 
-    def _get_messages(self, entity: str):
+    def _get_messages(self, entity: str) -> None:
+        """
+            Private method used to scrape messages for a given entity.
+
+            :param entity: Entity identifier.
+            :return: None.
+        """
         messages_links = []
         self.driver.get(self.messages_link)
         for i in range(1):
@@ -111,7 +150,13 @@ class BankierScraper:
                     td_content = next_tr.find('td', {'colspan': True}).text
                     self.news.loc[len(self.news)] = [entity, date, td_content]
 
-    def _get_forum(self, entity: str):
+    def _get_forum(self, entity: str) -> None:
+        """
+            Private method used to scrape forum data for a given entity.
+
+            :param entity: Entity identifier.
+            :return: None.
+        """
         thread_links = []
         self.driver.get(self.forum_link)
         for i in range(1):

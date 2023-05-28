@@ -1,0 +1,53 @@
+Metadata-Version: 2.1
+Name: WebCrawler
+Version: 1.0
+Summary: A web crawler used for osint purpose
+Home-page: https://github.com/Tobias2705/Web_Crawler
+Requires-Python: >=3.11.2
+
+# Osint Web Crawler
+
+## Opis projektu
+
+Projekt zrealizowany na przedmiot "Hurtownie Danych" we wspÃ³Å‚pracÄ… z KomisjÄ… Nadzoru Finansowego.
+
+W ramach projektu realizowane jest zbieranie danych na temat podmiotÃ³w, wpisÃ³w nt. tych podmiotÃ³w oraz analiza sentymentu wpisu.
+
+Scrapowane strony:
+- Regon - zbieranie podstawowych informacji o podmiocie
+- KRS - zbieranie podstawowych informacji o podmiocie
+- Aleo - zbieranie podstawowych informacji o podmiocie
+- Bankier - wyciÄ…gane sÄ… depesze ktÃ³re podlegajÄ… ocenie sentymelnej
+- Infostrefa - wyciÄ…gane sÄ… depesze ktÃ³re podlegajÄ… ocenie sentymelnej
+
+## Instalacja
+
+PrzejdÅº do gÅ‚Ã³wnego folderu projektu i wykonaj nastÄ™pujÄ…ce polecenie
+
+```commandline
+python -m pip install -e .
+```
+
+## PrzykÅ‚adowe komendy
+
+Uruchomienie scrapowania:
+
+```commandline
+wcrawler scrap file.txt -db -c
+```
+Flagi:
+- db - zapisanie wyniku do bazy danych
+- c - wyczyszczenie bazy danych przed jej uÅ¼yciem
+
+Uruchomienie graficznego klienta:
+```commandline
+wcrawler gui
+```
+
+## Autorzy
+
+Tobiasz GruszczyÅ„ski,
+Jakub Kaczmarek,
+MiÅ‚osz Grocholewski,
+Dan Brushko
+

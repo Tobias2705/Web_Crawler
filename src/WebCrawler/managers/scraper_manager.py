@@ -115,7 +115,7 @@ class ScraperManager:
     def _run_infostrefa_scraper(self):
         # scraping from regon NIPs and names
         entities_df = self.regon_entity_df[["nip", "nazwa_gieldowa"]].copy().drop_duplicates()
-        scraper = InfoStrefaScrapper(entities_df, print_info=self.log_scrap_info)
+        scraper = InfoStrefaScraper(entities_df, print_info=self.log_scrap_info)
         self.infostrefa_news_df = scraper.get_data()
 
     def _run_bankier_scraper(self):
