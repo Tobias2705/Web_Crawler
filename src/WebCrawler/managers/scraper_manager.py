@@ -10,7 +10,17 @@ import pathlib
 
 
 class ScraperManager:
-    def __init__(self, input_path, log_scrap_info=False):
+    """Class which manages running all the scrappers and saving results to csv files.
+    
+    :param input_path: Path to the file with identifiers of entities to scrap
+    :type input_path: str
+    :param log_scrap_info: Specifies whether there to print info about scraping proccess, defaults to False
+    :type log_scrap_info: bool, optional
+    """
+
+    def __init__(self, input_path: str, log_scrap_info: bool = False):
+        """Constructor method.
+        """
         data, errors = InputValidator(input_path).validate_input()
         self.log_scrap_info = log_scrap_info
         self.data = data
@@ -18,7 +28,9 @@ class ScraperManager:
 
         self.logger = get_logger()
 
-    def scrap(self):
+    def scrap(self) -> None:
+        """Runs all the scrapers, some scrapers might be running parallelly.
+        """
         # run regon and krs scrapers parallelly
         regon_thread = Thread(target=self._run_regon_scraper)
         krs_thread = Thread(target=self._run_krs_scraper)
@@ -64,7 +76,9 @@ class ScraperManager:
         sentiment_time_thread.join()
         self.logger.info('Sentiment analysis finished')
 
-    def _run_aleo_scraper(self):
+    def _run_aleo_scraper(self) -> None:
+        """Runs scraper responsible for scraping ALEO.
+        """
         # scraping from regon NIPs
         account_numbers_df = pd.DataFrame(columns=['nip', 'account_number'])
         shareholders_df = pd.DataFrame(columns=['nip', 'shareholder'])
@@ -90,15 +104,15 @@ class ScraperManager:
         self.aleo_account_numbers_df = account_numbers_df
         self.aleo_shareholders_df = shareholders_df
 
-    def _run_info_sentiment(self):
+    def _run_info_sentiment(self) -> None:
         sentiment_analyzer = SentimentAnalyzer()
         self.info_sentiment = sentiment_analyzer.get_sentiment_analysis(self.infostrefa_news_df)
 
-    def _run_bankier_sentiment(self):
+    def _run_bankier_sentiment(self) -> None:
         sentiment_analyzer = SentimentAnalyzer()
         self.bankier_sentiment = sentiment_analyzer.get_sentiment_analysis(self.bankier_news_df)
 
-    def _run_time_scv(self):
+    def _run_time_scv(self) -> None:
         sentiment_analyzer = SentimentAnalyzer()
 
         info_time_df = sentiment_analyzer.generate_time_table(self.infostrefa_news_df)
@@ -106,25 +120,31 @@ class ScraperManager:
 
         self.time_df = pd.concat([info_time_df, bank_time_df], ignore_index=True)
 
-    def _run_stock_name_scraper(self):
+    def _run_stock_name_scraper(self) -> None:
         entities_df = self.regon_entity_df[["nazwa", "nip"]].copy().drop_duplicates()
         scraper = StockNameScraper(entities_df, print_info=self.log_scrap_info)
         stock_names = scraper.get_data()
         self.regon_entity_df['nazwa_gieldowa'] = stock_names
 
-    def _run_infostrefa_scraper(self):
+    def _run_infostrefa_scraper(self) -> None:
+        """Runs scraper responsible for scraping Infostrefa.
+        """
         # scraping from regon NIPs and names
         entities_df = self.regon_entity_df[["nip", "nazwa_gieldowa"]].copy().drop_duplicates()
         scraper = InfoStrefaScraper(entities_df, print_info=self.log_scrap_info)
         self.infostrefa_news_df = scraper.get_data()
 
-    def _run_bankier_scraper(self):
+    def _run_bankier_scraper(self) -> None:
+        """Runs scraper responsible for scraping Bankier.
+        """
         # scraping from regon NIPs and names
         entities_df = self.regon_entity_df[["nip", "nazwa_gieldowa"]].copy().drop_duplicates()
         scraper = BankierScraper(entities_df, print_info=self.log_scrap_info)
         self.bankier_news_df = scraper.get_data()
 
-    def _run_krs_scraper(self):
+    def _run_krs_scraper(self) -> None:
+        """Runs scraper responsible for scraping KRS.
+        """
         general_info_df = pd.DataFrame(columns=[
             "nazwa", "krs", "nip", "regon", "forma_prawna", "data_wpisu_do_rej_przeds", "data_wykr_z_rej_przeds",
             "nazwa_org_repr", "sposob_repr", "adr_www", "email"])
@@ -147,7 +167,9 @@ class ScraperManager:
         self.krs_representants_df = representants_df
         self.krs_general_info_df = general_info_df
 
-    def _run_regon_scraper(self):
+    def _run_regon_scraper(self) -> None:
+        """Runs scraper responsible for scraping REGON.
+        """
         regon_entity_df = pd.DataFrame()
         regon_local_entity_df = pd.DataFrame()
         regon_pkd = pd.DataFrame()
@@ -171,7 +193,9 @@ class ScraperManager:
         self.regon_local_entity_df = regon_local_entity_df
         self.regon_pkd_df = regon_pkd
 
-    def _get_results(self):
+    def _get_results(self) -> dict:
+        """Constructs the result of scraping as a dictionary of DataFrames.
+        """
         results = {
             'regon_entity_df': self.regon_entity_df.copy(),
             'regon_local_entity_df': self.regon_local_entity_df.copy(),
@@ -188,7 +212,12 @@ class ScraperManager:
         }
         return results
 
-    def save_to_csv(self, path=''):
+    def save_to_csv(self, path: str = ''):
+        """Saves results to csv files.
+
+        :param path: Path which specifies where to save csv files, defaults to ''
+        :type path: str, optional
+        """
         for k, v in self._get_results().items():
             v.to_csv(os.path.join(path, k), index=False)
 

@@ -3,4 +3,5 @@
 **geckodriver.log
 **/output/
 **/.ipynb_checkpoints/
+**/WebCrawler.egg-info/
 *.db

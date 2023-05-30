@@ -7,6 +7,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import time
 import pandas as pd
 import pprint
+from typing import *
 
 xpaths = {
     'KRS': "//ds-input[@label='Numer KRS']/*/input",
@@ -32,13 +33,27 @@ xpaths = {
 }
 
 class KrsScrapper:
-    def __init__(self, id, id_type, headless = True):
+    """Class used for scrapping https://wyszukiwarka-krs.ms.gov.pl/
+
+    :param id: Identifier of the entity
+    :type id: str
+    :param id_type: Type of the identifier for entity (NIP, REGON or KRS)
+    :type id_type: str
+    :param headless: Specifies whether the browser should not pop up while scrapping, defaults to True
+    :type headless: bool, optional
+    """
+
+    def __init__(self, id: str, id_type: Literal["NIP", "REGON", "KRS"], headless: bool = True) -> None:
+        """Constructor method.
+        """
         self.url = 'https://wyszukiwarka-krs.ms.gov.pl/'
         self.id = id
         self.id_type = id_type
         self.headless = headless
 
-    def scrap(self):
+    def scrap(self) -> None:
+        """Scraps the site.
+        """
         chrome_options = Options()
         if self.headless:
             chrome_options.add_argument("--headless")

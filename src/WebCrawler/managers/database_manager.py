@@ -535,7 +535,9 @@ class DataBaseManager:
         except sqlite3.Error as error:
             self.logger.error(f"Failed to insert time data into table czas - {error}")
 
-    def insert_all(self):
+    def insert_all(self) -> None:
+        """Creates database tables and inserts the whole output of scraping proccess (including sentiment analysis) to the database.
+        """
         # Initialize database
         try:
             self._create_db_create_tables()

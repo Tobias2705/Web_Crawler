@@ -16,9 +16,13 @@ def cli():
 
 @click.command()
 @click.argument('file', type=click.Path(exists=True))
-@click.option('-db', '--database', is_flag=True)
-@click.option('-c', '--clear', is_flag=True)
+@click.option('-db', '--database', is_flag=True, help='Specifies whether results should be saved to a database.')
+@click.option('-c', '--clear', is_flag=True, help='Specifies whether to clean a database before saving results there.')
 def scrap(file, database, clear):
+    """Runs the whole process of scraping and doing sentiment analysis.
+
+    FILE is the path to the file with entities to scrap.
+    """
     scraper_manager = ScraperManager(os.path.abspath(file), log_scrap_info=True)
     scraper_manager.scrap()
 
@@ -47,6 +51,8 @@ def scrap(file, database, clear):
 
 @click.command()
 def gui():
+    """Runs the app with a GUI.
+    """
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
@@ -54,8 +60,10 @@ def gui():
 
 
 @click.command()
-@click.option('-c', '--clear', is_flag=True)
+@click.option('-c', '--clear', is_flag=True, help='Specifies whether to clean a database before saving results there.')
 def insert_to_db(clear):
+    """Saves results of scraping to the database.
+    """
     output_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', '..', '..', 'output')
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -76,6 +84,12 @@ def insert_to_db(clear):
 @click.argument('entity_id', required=True)
 @click.argument('id_type', required=True)
 def check_info(entity_id, id_type):
+    """Allows to check some basic info about the entity from regon and krs.
+
+    ENTITY_ID specifies the identifier of the entity.
+    
+    ID_TYPE specifies the the of given identifier (NIP, REGON or KRS).
+    """
     click.echo("Checking information about entity...")
 
     try:
