@@ -1,3 +1,9 @@
+"""
+infostrefa_scraper.py
+====================================
+This module is used to scrape data from infostrefa.pl website.
+"""
+
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -7,8 +13,23 @@ import logging
 from WebCrawler.custom_logger import get_logger
 
 
-class InfoStrefaScrapper:
-    def __init__(self, entities: pd.DataFrame, print_info = False):
+class InfoStrefaScraper:
+    """
+        Class responsible for scraping data from infostrefa.pl website.
+
+
+        Attributes:
+            entities (pd.DataFrame): DataFrame containing entities data.
+            print_info (bool): Flag indicating whether to print information during the scraping process.
+    """
+    def __init__(self, entities: pd.DataFrame, print_info=False):
+        """
+            Initializes an instance of InfoStrefaScraper.
+
+            :param entities: DataFrame containing entities data.
+            :param print_info: Flag indicating whether to print information during the scraping process.
+                Defaults to False.
+        """
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
@@ -24,7 +45,13 @@ class InfoStrefaScrapper:
         self.print_info = print_info
         self.logger = get_logger()
 
-    def _get_news_links(self):
+    def _get_news_links(self) -> None:
+        """
+            Private method used to retrieve news links from the search result page.
+
+            :param: None.
+            :return: None.
+        """
         self.news_links = []
         pages_num = self.driver.find_element(By.XPATH, "//ul[@class='pagination']/li[last()]").text
 
@@ -39,7 +66,14 @@ class InfoStrefaScrapper:
             if next_page_btn:
                 next_page_btn.click()
 
-    def get_data(self):
+    def get_data(self) -> pd.DataFrame:
+        """
+            Public method used to scrape data from infostrefa.pl for each entity and returns a DataFrame.
+
+            :param: None.
+            :return: DataFrame containing scraped data.
+
+        """
         self.driver.get('https://infostrefa.com/infostrefa/pl/index/')
         self.driver.delete_all_cookies()
         self.driver.execute_script("window.localStorage.clear()")
@@ -64,7 +98,13 @@ class InfoStrefaScrapper:
         self.driver.quit()
         return self.news
 
-    def _get_entity_id(self, entity: str):
+    def _get_entity_id(self, entity: str) -> str:
+        """
+            Private method used to retrieve the entity ID from the company list page based on its name.
+
+            :param entity: Name of the entity for which the ID is to be retrieved.
+            :return: Entity ID if found, otherwise an empty string.
+        """
         self.driver.get("https://infostrefa.com/infostrefa/pl/spolki")
         html = self.driver.page_source
         soup = BeautifulSoup(html, 'html.parser')
@@ -75,8 +115,15 @@ class InfoStrefaScrapper:
             if td.text.lower() == entity.lower():
                 id = td.find('a')['href'].split('/')[-1].split(',')[0]
                 return id
+        return ''
 
-    def _get_news(self, entity: str):
+    def _get_news(self, entity: str) -> None:
+        """
+            Private method used to scrape news for a given entity.
+
+            :param entity: Entity identifier.
+            :return: None.
+        """
         for i in range(len(self.news_links)):
             self.driver.get(f"https://infostrefa.com{self.news_links[i]}")
             html = self.driver.page_source
