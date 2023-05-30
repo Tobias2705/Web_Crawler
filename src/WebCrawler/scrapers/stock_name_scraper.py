@@ -3,12 +3,13 @@ stock_name_scraper.py
 ====================================
 This module is used to scrape entities stock name.
 """
-
+import os
 import time
 import pandas as pd
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as firefoxOptions
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from bs4 import BeautifulSoup
@@ -37,7 +38,8 @@ class StockNameScraper:
         """
         firefox_options = firefoxOptions()
         firefox_options.add_argument("--headless")
-        self.driver = webdriver.Firefox(options=firefox_options)
+        service = Service(log_path=os.devnull)
+        self.driver = webdriver.Firefox(options=firefox_options, service=service)
         self.driver.implicitly_wait(2)
         self.entities = entities
         self.print_info = print_info
