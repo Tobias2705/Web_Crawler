@@ -9,6 +9,33 @@ nltk.download('wordnet', quiet=True)
 
 
 class SentimentAnalyzer:
+    """
+    A class used to analyze sentiment in text data.
+
+    ...
+
+    Attributes
+    ----------
+    sentiment_dict : dict
+        A dictionary containing lists of words associated with different sentiment categories.
+    lemmatizer : WordNetLemmatizer
+        An instance of the WordNetLemmatizer class.
+    analyze_bankier : bool
+        A flag indicating whether to analyze bankier data or not.
+    tokenizer : AutoTokenizer
+        An instance of the AutoTokenizer class.
+    model : AutoModelForSequenceClassification
+        An instance of the AutoModelForSequenceClassification class.
+
+    Methods
+    -------
+    analyze_text(text)
+        Analyzes the sentiment of the given text and returns the sentiment category.
+    generate_time_table(df)
+        Generates a time table from the given DataFrame.
+    get_sentiment_analysis(df)
+        Analyzes the sentiment of the text data in the given DataFrame and returns a DataFrame with sentiment analysis results.
+    """
     def __init__(self, analyze_bankier=False):
         self.sentiment_dict = {
             "pozytywny": ["sukces", "wzrost", "postęp", "dobry", "wynik", "zwiększenie", "dobra", "tendencja",
@@ -38,7 +65,19 @@ class SentimentAnalyzer:
         self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
     def analyze_text(self, text):
-        #funkcja która zwraca wynik analizy tekstu według wybranego podejśćia analizy sentymentu
+        """
+        Analyzes the sentiment of the given text and returns the sentiment category.
+
+        Parameters
+        ----------
+        text : str
+            The text to be analyzed.
+
+        Returns
+        -------
+        str
+            The sentiment category of the text (either "negatwny", "neutralny", or "pozytywny").
+        """
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
         outputs = self.model(**inputs)
         sentiment = torch.argmax(outputs.logits, dim=1).item()
@@ -51,7 +90,19 @@ class SentimentAnalyzer:
             return "pozytywny"
 
     def generate_time_table(self, df):
-        #funkcja która przyjmuję dataframe i generuję time id
+        """
+        Generates a time table from the given DataFrame.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The input DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the time table.
+        """
         time_df = pd.DataFrame()
 
         if self.analyze_bankier:
@@ -67,7 +118,19 @@ class SentimentAnalyzer:
         return time_df
 
     def get_sentiment_analysis(self, df):
-        #funkcja która przyjmuję dataframe do analizy i zwraca dataframe z oceną sentymentu
+        """
+        Analyzes the sentiment of the text data in the given DataFrame and returns a DataFrame with sentiment analysis results.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The input DataFrame containing text data to be analyzed.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the sentiment analysis results.
+        """
         sentiment_analysis = df.copy()
 
         if self.analyze_bankier:
