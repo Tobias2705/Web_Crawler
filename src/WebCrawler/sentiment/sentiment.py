@@ -1,3 +1,5 @@
+import os
+import warnings
 import nltk
 import pandas as pd
 import torch
@@ -20,8 +22,6 @@ class SentimentAnalyzer:
         A dictionary containing lists of words associated with different sentiment categories.
     lemmatizer : WordNetLemmatizer
         An instance of the WordNetLemmatizer class.
-    analyze_bankier : bool
-        A flag indicating whether to analyze bankier data or not.
     tokenizer : AutoTokenizer
         An instance of the AutoTokenizer class.
     model : AutoModelForSequenceClassification
@@ -32,11 +32,12 @@ class SentimentAnalyzer:
     analyze_text(text)
         Analyzes the sentiment of the given text and returns the sentiment category.
     generate_time_table(df)
-        Generates a time table from the given DataFrame.
+        Generates a time's table from the given DataFrame.
     get_sentiment_analysis(df)
-        Analyzes the sentiment of the text data in the given DataFrame and returns a DataFrame with sentiment analysis results.
+        Analyzes the sentiment of the text data in the given DataFrame and returns a DataFrame with sentiment analysis
+        results.
     """
-    def __init__(self, analyze_bankier=False):
+    def __init__(self):
         self.sentiment_dict = {
             "pozytywny": ["sukces", "wzrost", "postęp", "dobry", "wynik", "zwiększenie", "dobra", "tendencja",
                           "doskonałe", "wynik", "wygrana", "przychód", "zysk", "dobrze", "prosperujący", "sukces",
@@ -58,13 +59,14 @@ class SentimentAnalyzer:
             "rynek": ["konkurencja", "nowi", "konkurenci", "nowi", "gracze", "rynku", "wzrost", "rywalizacji", "nowe",
                       "produkty", "konkurentów", "nowe", "usługi", "rynku"],
         }
+        warnings.filterwarnings("ignore")
+        os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
         self.lemmatizer = WordNetLemmatizer()
-        self.analyze_bankier = analyze_bankier
         model_name = "nlptown/bert-base-multilingual-uncased-sentiment"
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
-    def analyze_text(self, text):
+    def analyze_text(self, text: str) -> str:
         """
         Analyzes the sentiment of the given text and returns the sentiment category.
 
@@ -89,9 +91,10 @@ class SentimentAnalyzer:
         else:
             return "pozytywny"
 
-    def generate_time_table(self, df):
+    @staticmethod
+    def generate_time_table(df: pd.DataFrame) -> pd.DataFrame:
         """
-        Generates a time table from the given DataFrame.
+        Generates a data for time's table from the given DataFrame.
 
         Parameters
         ----------
@@ -101,14 +104,11 @@ class SentimentAnalyzer:
         Returns
         -------
         pd.DataFrame
-            A DataFrame containing the time table.
+            A DataFrame containing the time's table.
         """
         time_df = pd.DataFrame()
 
-        if self.analyze_bankier:
-            timestamp = pd.to_datetime(df['data'], format='%Y-%m-%d %H:%M')
-        else:
-            timestamp = pd.to_datetime(df['data'], format='%H:%M %d/%m/%Y')
+        timestamp = pd.to_datetime(df['data'], format='%H:%M %d/%m/%Y')
 
         time_df['godzina'] = timestamp.dt.hour
         time_df['dzien'] = timestamp.dt.day
@@ -117,9 +117,10 @@ class SentimentAnalyzer:
 
         return time_df
 
-    def get_sentiment_analysis(self, df):
+    def get_sentiment_analysis(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Analyzes the sentiment of the text data in the given DataFrame and returns a DataFrame with sentiment analysis results.
+        Analyzes the sentiment of the text data in the given DataFrame and returns a DataFrame with sentiment analysis
+        results.
 
         Parameters
         ----------
@@ -133,10 +134,7 @@ class SentimentAnalyzer:
         """
         sentiment_analysis = df.copy()
 
-        if self.analyze_bankier:
-            timestamp = pd.to_datetime(df['data'], format='%Y-%m-%d %H:%M')
-        else:
-            timestamp = pd.to_datetime(df['data'], format='%H:%M %d/%m/%Y')
+        timestamp = pd.to_datetime(df['data'], format='%H:%M %d/%m/%Y')
 
         sentiment_analysis['timestamp'] = timestamp.astype(str)
         sentiment_analysis['typ_oceny'] = sentiment_analysis['wiadomosc'].apply(lambda x: self.analyze_text(x))

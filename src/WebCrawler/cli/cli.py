@@ -79,7 +79,6 @@ def insert_to_db(clear):
     click.echo("Data inserted")
 
 
-
 @click.command()
 @click.argument('entity_id', required=True)
 @click.argument('id_type', required=True)
@@ -88,7 +87,7 @@ def check_info(entity_id, id_type):
 
     ENTITY_ID specifies the identifier of the entity.
     
-    ID_TYPE specifies the the of given identifier (NIP, REGON or KRS).
+    ID_TYPE specifies the of given identifier (NIP, REGON or KRS).
     """
     click.echo("Checking information about entity...")
 

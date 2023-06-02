@@ -21,7 +21,10 @@ setup(
         "scikit-learn >= 1.2.1",
         "selenium >= 4.8.3",
         "beautifulsoup4 >= 4.11.2",
-        "requests >= 2.28.2"
+        "requests >= 2.28.2",
+        "matplotlib >= 3.7.1",
+        "torch >= 2.0.1",
+        "transformers >= 4.29.2"
     ],
     python_requires=">=3.11.2",
     entry_points={

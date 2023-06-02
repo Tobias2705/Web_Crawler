@@ -31,7 +31,6 @@ class DataBaseManager:
         self.output_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), '..', '..', '..', 'output', 'csv')
         self.logger = get_logger()
 
-
     @staticmethod
     def _find_entities(conn: sqlite3.Connection, df: pd.DataFrame, table: str, column: str, compare: str) -> List[int]:
         """
@@ -536,7 +535,8 @@ class DataBaseManager:
             self.logger.error(f"Failed to insert time data into table czas - {error}")
 
     def insert_all(self) -> None:
-        """Creates database tables and inserts the whole output of scraping proccess (including sentiment analysis) to the database.
+        """Creates database tables and inserts the whole output of scraping proccess (including sentiment analysis) to
+        the database.
         """
         # Initialize database
         try:
@@ -596,7 +596,7 @@ if __name__ == '__main__':
     if not os.path.exists(db_dir):
         os.makedirs(db_dir)
 
-    db_path = os.path.join(db_dir, 'KNF_sentiment.db')
+    path = os.path.join(db_dir, 'KNF_sentiment.db')
 
-    db_manager = DataBaseManager(db_path=db_path, clear_database=True)
+    db_manager = DataBaseManager(db_path=path, clear_database=True)
     db_manager.insert_all()

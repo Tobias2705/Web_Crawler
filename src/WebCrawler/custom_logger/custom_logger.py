@@ -1,5 +1,6 @@
 import logging
 
+
 class CustomFormatter(logging.Formatter):
     """Custom formatter class used to convert a logging.LogRecord instance to a text.
     """
@@ -22,6 +23,7 @@ class CustomFormatter(logging.Formatter):
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
+
 
 def get_logger() -> logging.Logger:
     """Creates common logging.Logger instance for the whole application.

@@ -3,10 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.common.action_chains import ActionChains
-import time
 import pandas as pd
-import pprint
 from typing import *
 
 xpaths = {
@@ -32,10 +29,11 @@ xpaths = {
     'NextPage': "//*[@class='p-paginator-next p-paginator-element p-link p-ripple']"
 }
 
+
 class KrsScrapper:
     """Class used for scrapping https://wyszukiwarka-krs.ms.gov.pl/
 
-    :param id: Identifier of the entity
+    :param idx: Identifier of the entity
     :type id: str
     :param id_type: Type of the identifier for entity (NIP, REGON or KRS)
     :type id_type: str
@@ -43,15 +41,15 @@ class KrsScrapper:
     :type headless: bool, optional
     """
 
-    def __init__(self, id: str, id_type: Literal["NIP", "REGON", "KRS"], headless: bool = True) -> None:
+    def __init__(self, idx: str, id_type: Literal["NIP", "REGON", "KRS"], headless: bool = True) -> None:
         """Constructor method.
         """
         self.url = 'https://wyszukiwarka-krs.ms.gov.pl/'
-        self.id = id
+        self.id = idx
         self.id_type = id_type
         self.headless = headless
 
-    def scrap(self) -> None:
+    def scrap(self) -> Tuple[dict[str, str], pd.DataFrame]:
         """Scraps the site.
         """
         chrome_options = Options()
@@ -77,13 +75,12 @@ class KrsScrapper:
         search_button_element.click()
 
         # search table's first row
-        table_element = driver.find_element(By.XPATH, xpaths['Table'])
+        driver.find_element(By.XPATH, xpaths['Table'])
 
-        first_link_element = None
         try:
             WebDriverWait(driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['Link'])))
         except:
-            raise(f"KrsScrapper: Not found {self.id_type}: {self.id} in KRS.")
+            raise f"KrsScrapper: Not found {self.id_type}: {self.id} in KRS."
 
         driver.execute_script("document.getElementsByClassName('link')[0].click()")
 
@@ -159,8 +156,9 @@ class KrsScrapper:
                 representants.loc[len(representants)] = row_data_ordered
 
             try:
-                next_page_element = driver.find_element(By.XPATH, xpaths['NextPage'])
-                driver.execute_script("document.getElementsByClassName('p-paginator-next p-paginator-element p-link p-ripple')[0].click()")
+                driver.find_element(By.XPATH, xpaths['NextPage'])
+                driver.execute_script("document.getElementsByClassName('p-paginator-next p-paginator-element p-link "
+                                      "p-ripple')[0].click()")
             except:
                 break
 

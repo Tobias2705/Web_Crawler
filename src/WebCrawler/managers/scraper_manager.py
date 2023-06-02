@@ -153,7 +153,7 @@ class ScraperManager:
         for count, row in enumerate(self.data):
             counter = f'{str(count + 1)}/{len(self.data)}'
             try:
-                scraper = KrsScrapper(id=row[0], id_type=row[1])
+                scraper = KrsScrapper(idx=row[0], id_type=row[1])
                 gen_info_dict, repr_df = scraper.scrap()
 
                 representants_df = pd.concat([representants_df, repr_df], axis=0).reset_index(drop=True)

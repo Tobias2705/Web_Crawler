@@ -66,7 +66,8 @@ class MainWindow(QMainWindow):
         text = """
         Projekt zrealizowany na przedmiot "Hurtownie Danych" we współpracą z Komisją Nadzoru Finansowego.
 
-        W ramach projektu realizowane jest zbieranie danych na temat podmiotów, wpisów nt. tych podmiotów oraz analiza sentymentu wpisu.
+        W ramach projektu realizowane jest zbieranie danych na temat podmiotów, wpisów nt. tych podmiotów oraz 
+        analiza sentymentu wpisu.
 
         Scrapowane strony:
         Regon - zbieranie podstawowych informacji o podmiocie

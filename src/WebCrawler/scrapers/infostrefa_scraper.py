@@ -9,7 +9,6 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-import logging
 from WebCrawler.custom_logger import get_logger
 
 
@@ -113,8 +112,8 @@ class InfoStrefaScraper:
 
         for td in td_elements:
             if td.text.lower() == entity.lower():
-                id = td.find('a')['href'].split('/')[-1].split(',')[0]
-                return id
+                idx = td.find('a')['href'].split('/')[-1].split(',')[0]
+                return idx
         return ''
 
     def _get_news(self, entity: str) -> None:

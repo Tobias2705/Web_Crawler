@@ -14,8 +14,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from bs4 import BeautifulSoup
 from typing import List
-import logging
 from WebCrawler.custom_logger import get_logger
+
 
 class StockNameScraper:
     """
@@ -49,7 +49,8 @@ class StockNameScraper:
 
     def get_data(self) -> List[str]:
         """
-            Public method used to retrieve the stock names for entities by calling private methods and returns a list of stock names.
+            Public method used to retrieve the stock names for entities by calling private methods and returns a list
+            of stock names.
 
             :param: None.
             :return: List of stock names for entities.
