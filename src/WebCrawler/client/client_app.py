@@ -430,9 +430,8 @@ class MainWindow(QMainWindow):
 
                 ax.get_xaxis().set_visible(False)
 
-                typ_oceny_labels = ['Negatywny', 'Częściowo negatywny', 'Neutralny', 'Częściowo pozytywny', 'Pozytywny']
-                typ_oceny_mapping = {'negatywny': 1, 'częściowo negatywny': 2, 'neutralny': 3, 'częściowo pozytywny': 4,
-                                     'pozytywny': 5}
+                typ_oceny_labels = ['Negatywny', 'Neutralny', 'Pozytywny']
+                typ_oceny_mapping = {'negatywny': 1, 'neutralny': 2, 'pozytywny': 3}
                 ax.set_yticks(list(typ_oceny_mapping.values()))
                 ax.set_yticklabels(typ_oceny_labels)
 

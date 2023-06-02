@@ -85,7 +85,7 @@ class SentimentAnalyzer:
         sentiment = torch.argmax(outputs.logits, dim=1).item()
 
         if sentiment == 0:
-            return "negatwny"
+            return "negatywny"
         elif sentiment == 1:
             return "neutralny"
         else:
