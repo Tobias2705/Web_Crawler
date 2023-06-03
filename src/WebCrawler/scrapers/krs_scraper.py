@@ -30,7 +30,7 @@ xpaths = {
 }
 
 
-class KrsScrapper:
+class KrsScraper:
     """Class used for scrapping https://wyszukiwarka-krs.ms.gov.pl/
 
     :param idx: Identifier of the entity
