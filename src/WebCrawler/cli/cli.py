@@ -92,11 +92,11 @@ def check_info(entity_id, id_type):
     click.echo("Checking information about entity...")
 
     try:
-        from WebCrawler.scrapers import KrsScrapper, RegonScraper
+        from WebCrawler.scrapers import KrsScraper, RegonScraper
         regon_scraper = RegonScraper()
         _, local_entities_df, pkd_df = regon_scraper.get_entity_info(entity_id, id_type)
 
-        krs_scrapper = KrsScrapper(entity_id, id_type)
+        krs_scrapper = KrsScraper(entity_id, id_type)
         general_info, representants = krs_scrapper.scrap()
 
         click.echo(f"{'Nazwa: ':<40}{general_info['nazwa']}")
