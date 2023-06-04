@@ -105,14 +105,20 @@ class ScraperManager:
         self.aleo_shareholders_df = shareholders_df
 
     def _run_info_sentiment(self) -> None:
+        """Runs sentiment analyzer for Infostrefa
+        """
         sentiment_analyzer = SentimentAnalyzer()
         self.info_sentiment = sentiment_analyzer.get_sentiment_analysis(self.infostrefa_news_df)
 
     def _run_bankier_sentiment(self) -> None:
+        """Runs sentiment analyzer for Bankier
+        """
         sentiment_analyzer = SentimentAnalyzer()
         self.bankier_sentiment = sentiment_analyzer.get_sentiment_analysis(self.bankier_news_df)
 
     def _run_time_scv(self) -> None:
+        """Generates time tables for Infostrefa and Bankier news, and then combines them into a single table time_df
+        """
         sentiment_analyzer = SentimentAnalyzer()
 
         info_time_df = sentiment_analyzer.generate_time_table(self.infostrefa_news_df)
@@ -121,6 +127,8 @@ class ScraperManager:
         self.time_df = pd.concat([info_time_df, bank_time_df], ignore_index=True)
 
     def _run_stock_name_scraper(self) -> None:
+        """Runs scraper responsible for scraping entities stock names.
+        """
         entities_df = self.regon_entity_df[["nazwa", "nip"]].copy().drop_duplicates()
         scraper = StockNameScraper(entities_df, print_info=self.log_scrap_info)
         stock_names = scraper.get_data()
