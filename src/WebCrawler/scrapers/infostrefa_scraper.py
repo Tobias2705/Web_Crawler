@@ -21,7 +21,7 @@ class InfoStrefaScraper:
             entities (pd.DataFrame): DataFrame containing entities data.
             print_info (bool): Flag indicating whether to print information during the scraping process.
     """
-    def __init__(self, entities: pd.DataFrame, print_info=False):
+    def __init__(self, entities: pd.DataFrame, num_pages=1, print_info=False):
         """
             Initializes an instance of InfoStrefaScraper.
 
@@ -43,6 +43,7 @@ class InfoStrefaScraper:
         ])
         self.print_info = print_info
         self.logger = get_logger()
+        self.num_pages = num_pages
 
     def _get_news_links(self) -> None:
         """
@@ -54,7 +55,7 @@ class InfoStrefaScraper:
         self.news_links = []
         pages_num = self.driver.find_element(By.XPATH, "//ul[@class='pagination']/li[last()]").text
 
-        for i in range(min(int(pages_num), 1)):
+        for i in range(min(int(pages_num), self.num_pages)):
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
 
