@@ -21,7 +21,7 @@ class BankierScraper:
             entities: DataFrame containing entities data.
             print_info: Flag indicating whether to print information during the scraping process.
     """
-    def __init__(self, entities: pd.DataFrame, print_info=False):
+    def __init__(self, entities: pd.DataFrame, num_pages=1, print_info=False):
         """
             Initializes an instance of BankierScraper.
 
@@ -45,6 +45,7 @@ class BankierScraper:
         ])
         self.print_info = print_info
         self.logger = get_logger()
+        self.num_pages = num_pages
 
     def get_data(self) -> pd.DataFrame:
         """
@@ -86,7 +87,7 @@ class BankierScraper:
         """
         news_links = []
         self.driver.get(self.news_link)
-        for i in range(1):
+        for i in range(self.num_pages):
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
             news_elements = soup.find('section', {'id': 'articleList'}).find_all('a', {'class': 'more-link'})
@@ -118,7 +119,7 @@ class BankierScraper:
         """
         messages_links = []
         self.driver.get(self.messages_link)
-        for i in range(1):
+        for i in range(self.num_pages):
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
             articles_div = soup.find('section', {'id': 'articleEspiList'})
@@ -161,7 +162,7 @@ class BankierScraper:
         """
         thread_links = []
         self.driver.get(self.forum_link)
-        for i in range(1):
+        for i in range(self.num_pages):
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
             tr_elements = soup.find('table', {'class': 'threadsList'}).find_all('tr')
