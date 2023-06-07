@@ -80,7 +80,7 @@ class KrsScraper:
         try:
             WebDriverWait(driver, 5).until(ec.presence_of_element_located((By.XPATH, xpaths['Link'])))
         except:
-            raise f"KrsScrapper: Not found {self.id_type}: {self.id} in KRS."
+            raise Exception(f"KrsScrapper: Not found {self.id_type}: {self.id} in KRS.")
 
         driver.execute_script("document.getElementsByClassName('link')[0].click()")
 
