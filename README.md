@@ -21,6 +21,8 @@ Przejdź do głównego folderu projektu i wykonaj następujące polecenie
 python -m pip install -e .
 ```
 
+**Do poprawnego działania biblioteki, konieczna jest instalacja przeglądarek Chrome i Firefox.**
+
 ## Przykładowe komendy
 
 Uruchomienie scrapowania:
